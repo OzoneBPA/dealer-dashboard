@@ -391,7 +391,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <!-- Overview + Trend -->
     <div class="top-section">
       <div class="donut-card">
-        <div class="donut-title"><i class="ti ti-chart-pie" style="font-size:12px;vertical-align:-1px"></i> DD Count by Business</div>
+        <div class="donut-title" id="donut-title-lbl"><i class="ti ti-chart-pie" style="font-size:12px;vertical-align:-1px"></i> YTD Active by Business</div>
         <div class="donut-wrap"><canvas id="donut-chart" role="img" aria-label="Dealer count donut chart"></canvas></div>
 
       </div>
@@ -642,15 +642,20 @@ function renderOverviewAndTrend(){
   document.getElementById('mtd-badge').textContent='MTD: '+(mtdM||'—');
 
   // ── Donut chart — DD count per business (respects all filters) ──
-    // Donut: always show all 3 biz DD counts (filter-aware), highlight active biz
-  const donutAllData=BIZ_LIST.map(b=>analyseFor(b).totalDD);
+    // Donut: YTD Active dealers per biz (MTD Active if month filter applied)
+  // Check if month filter is active — if yes use MTD active, else YTD active
+  const monthFiltered=FS.month.act.length<FS.month.all.length;
+  const donutMetric=monthFiltered?'mtdActive':'ytdActive';
+  const donutMetricLabel=monthFiltered?'MTD Active':'YTD Active';
+  const donutAllData=BIZ_LIST.map(b=>{const d=analyseFor(b);return d[donutMetric]||0;});
   const donutColorsBase=['#EA580C','#059669','#7C3AED'];
   const donutLabels=['HW','ERG','ST'];
   const donutTotal=donutAllData.reduce((s,v)=>s+v,0);
-  // Inactive slices get 25% opacity when a specific biz is selected
+
+  // Inactive slices: heavier blur (15% opacity) when a biz is selected
   const donutColors=donutLabels.map((lbl,i)=>{
     if(CURRENT_BIZ==='ALL') return donutColorsBase[i];
-    return lbl===CURRENT_BIZ ? donutColorsBase[i] : donutColorsBase[i]+'40';
+    return lbl===CURRENT_BIZ ? donutColorsBase[i] : donutColorsBase[i]+'26'; // ~15% opacity
   });
 
   if(CHARTS['donut']){CHARTS['donut'].destroy();delete CHARTS['donut']}
@@ -676,8 +681,25 @@ function renderOverviewAndTrend(){
         plugins:{
           legend:{display:false},
           tooltip:{callbacks:{
-            label:v=>v.label+': '+fmtInt(v.raw)+' DD ('+Math.round(v.raw/Math.max(donutTotal,1)*100)+'%)'
+            label:v=>v.label+': '+fmtInt(v.raw)+' Active ('+Math.round(v.raw/Math.max(donutTotal,1)*100)+'%)'
           }}
+        },
+        onClick:(evt,els)=>{
+          if(!els||!els.length)return;
+          const idx=els[0].index;
+          const biz=donutLabels[idx];
+          // Toggle biz selection via donut click
+          if(CURRENT_BIZ===biz){
+            switchBiz('ALL'); // click same slice again = go back to ALL
+          } else {
+            switchBiz(biz);
+          }
+          // Re-highlight vtabs
+          document.querySelectorAll('.vtab').forEach(t=>{
+            t.classList.remove('active');
+            if(t.querySelector('.vtab-name')&&t.querySelector('.vtab-name').textContent===CURRENT_BIZ) t.classList.add('active');
+            if(CURRENT_BIZ==='ALL'&&t.querySelector('.vtab-name')&&t.querySelector('.vtab-name').textContent==='ALL') t.classList.add('active');
+          });
         }
       },
       plugins:[{
@@ -688,15 +710,15 @@ function renderOverviewAndTrend(){
           ctx.save();
           const activeIdx=CURRENT_BIZ==='ALL'?-1:donutLabels.indexOf(CURRENT_BIZ);
           const centerVal=activeIdx>=0?donutAllData[activeIdx]:donutTotal;
-          const centerLbl=activeIdx>=0?CURRENT_BIZ+' DD':'Total DD';
+          const centerLbl=activeIdx>=0?CURRENT_BIZ+' '+donutMetricLabel:donutMetricLabel;
           ctx.font='800 20px -apple-system,sans-serif';
           ctx.fillStyle='#111827';
           ctx.textAlign='center';
           ctx.textBaseline='middle';
-          ctx.fillText(fmtInt(centerVal),cx,cy-8);
+          ctx.fillText(fmtInt(centerVal),cx,cy-9);
           ctx.font='500 10px -apple-system,sans-serif';
           ctx.fillStyle='#9CA3AF';
-          ctx.fillText(centerLbl,cx,cy+10);
+          ctx.fillText(centerLbl,cx,cy+9);
           ctx.restore();
         }
       },{
@@ -715,22 +737,21 @@ function renderOverviewAndTrend(){
             const midR=arc.innerRadius+(arc.outerRadius-arc.innerRadius)*0.5;
             const midX=arc.x+Math.cos(angle)*midR;
             const midY=arc.y+Math.sin(angle)*midR;
-            ctx.globalAlpha=isActive?1:0.4;
+            ctx.globalAlpha=isActive?1:0.18; // heavily faded
             ctx.font='700 10px -apple-system,sans-serif';
             ctx.fillStyle='#fff';
             ctx.textAlign='center';
             ctx.textBaseline='middle';
             ctx.fillText(donutLabels[i],midX,midY-6);
             ctx.font='600 9px -apple-system,sans-serif';
-            ctx.fillText(fmtInt(val)+' DD',midX,midY+6);
+            ctx.fillText(fmtInt(val),midX,midY+6);
             ctx.globalAlpha=1;
           });
           ctx.restore();
         }
       }]
     });
-  },50);
-  // ── Combined trend chart ────────────────────────────────────────
+  },50);  // ── Combined trend chart ────────────────────────────────────────
   if(CHARTS['trend-all']){CHARTS['trend-all'].destroy();delete CHARTS['trend-all']}
   setTimeout(()=>{
     const canvas=document.getElementById('trend-all');
