@@ -993,21 +993,26 @@ function renderSBUCards(d,cfg){
   const sbuTotal=d.sbuTotal||1;
   const grid=document.getElementById('sbu-grid');
   if(!grid)return;
-  grid.innerHTML=d.sbus.length
-    ?d.sbus.map((s,i)=>{
-        const p=Math.round(s.bv/sbuTotal*100);const sel=ACT_SBU.has(s.name);
-        return`<div class="cat-card${sel?' sel':''}" style="background:${CAT_GRAD[i%CAT_GRAD.length]}" onclick="toggleSBU('${s.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">
-          <div class="cc-c1"></div><div class="cc-c2"></div>
-          ${sel?'<div style="position:absolute;top:10px;right:10px;z-index:2;background:rgba(255,255,255,.25);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:13px;color:#fff"></i></div>':''}
-          <span class="cc-icon">${CAT_ICONS[i%CAT_ICONS.length]}</span>
-          <div class="cc-name">${s.name.toUpperCase().slice(0,28)}</div>
-          <div class="cc-val">₹${fmt(s.bv)}</div>
-          <div class="cc-pct">${p}% of total · ${s.dealers} DD</div>
-          <div class="cc-prog"><div class="cc-fill" style="width:${p}%"></div></div>
-        </div>`}).join('')
-    :'<div class="no-data">No SBU data</div>';
+  if(!d.sbus||!d.sbus.length){grid.innerHTML='<div class="no-data">No SBU data</div>';return;}
+  let html='';
+  d.sbus.forEach((s,i)=>{
+    const p=Math.round(s.bv/sbuTotal*100);
+    const sel=ACT_SBU.has(s.name);
+    const safeName=s.name.replace(/\/g,'\\').replace(/'/g,"\'");
+    html+='<div class="cat-card'+(sel?' sel':'')+'" style="background:'+CAT_GRAD[i%CAT_GRAD.length]+'" onclick="toggleSBU(''+safeName+'')">'
+      +'<div class="cc-c1"></div><div class="cc-c2"></div>'
+      +(sel?'<div style="position:absolute;top:10px;right:10px;z-index:2;background:rgba(255,255,255,.25);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:13px;color:#fff"></i></div>':'')
+      +'<span class="cc-icon">'+CAT_ICONS[i%CAT_ICONS.length]+'</span>'
+      +'<div class="cc-name">'+s.name.toUpperCase().slice(0,28)+'</div>'
+      +'<div class="cc-val">₹'+fmt(s.bv)+'</div>'
+      +'<div class="cc-pct">'+p+'% of total · '+s.dealers+' DD</div>'
+      +'<div class="cc-prog"><div class="cc-fill" style="width:'+p+'%"></div></div>'
+      +'</div>';
+  });
+  grid.innerHTML=html;
   grid.classList.toggle('has-sel',ACT_SBU.size>0);
 }
+
 
 // ── SBU MULTI-SELECT ───────────────────────────────────────────
 function toggleSBU(name){
