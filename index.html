@@ -547,8 +547,8 @@ function initFilters(keepApplied){
   const mSet=new Set(fyRows.map(r=>r['Months']||'').filter(Boolean));
   FS.month.all=MONTH_ORDER.filter(m=>mSet.has(m));
   FS.state.all=[...new Set(fyRows.map(r=>r['Customer State']||'').filter(Boolean))].sort();
-  // subgroup: filtered by current biz
-  const bizRows=fyRows.filter(r=>r['Business']===CURRENT_BIZ);
+  // subgroup & customer: ALL mode = all businesses, otherwise current biz
+  const bizRows=CURRENT_BIZ==='ALL'?fyRows:fyRows.filter(r=>r['Business']===CURRENT_BIZ);
   FS.subgroup.all=[...new Set(bizRows.map(r=>r['Sub- Group']||'').filter(Boolean))].sort();
   FS.customer.all=[...new Set(bizRows.map(r=>r['Customer Name']||'').filter(Boolean))].sort();
   if(!keepApplied){
@@ -566,7 +566,8 @@ function getFilteredRows(biz){
     :RAW.filter(r=>r['FY']===ACTIVE_FY&&r['Business']===biz);
   if(FS.month.act.length<FS.month.all.length) rows=rows.filter(r=>FS.month.act.includes(r['Months']||''));
   if(FS.state.act.length<FS.state.all.length) rows=rows.filter(r=>FS.state.act.includes(r['Customer State']||''));
-  if(biz===CURRENT_BIZ){
+  // Apply subgroup/customer/SBU filters when viewing that biz OR in ALL mode
+  if(biz===CURRENT_BIZ||CURRENT_BIZ==='ALL'){
     if(FS.subgroup.act.length<FS.subgroup.all.length) rows=rows.filter(r=>FS.subgroup.act.includes(r['Sub- Group']||''));
     if(FS.customer.act.length<FS.customer.all.length) rows=rows.filter(r=>FS.customer.act.includes(r['Customer Name']||''));
     if(ACT_SBU.size>0) rows=rows.filter(r=>ACT_SBU.has(r['SBU']||''));
@@ -599,7 +600,7 @@ function analyseFor(biz){
     :RAW.filter(r=>r['FY']===ACTIVE_FY&&r['Business']===biz);
   if(FS.month.act.length<FS.month.all.length) allBizRows=allBizRows.filter(r=>FS.month.act.includes(r['Months']||''));
   if(FS.state.act.length<FS.state.all.length) allBizRows=allBizRows.filter(r=>FS.state.act.includes(r['Customer State']||''));
-  if(biz===CURRENT_BIZ){
+  if(biz===CURRENT_BIZ||CURRENT_BIZ==='ALL'){
     if(FS.subgroup.act.length<FS.subgroup.all.length) allBizRows=allBizRows.filter(r=>FS.subgroup.act.includes(r['Sub- Group']||''));
     if(FS.customer.act.length<FS.customer.all.length) allBizRows=allBizRows.filter(r=>FS.customer.act.includes(r['Customer Name']||''));
   }
@@ -730,7 +731,7 @@ function switchBiz(biz){
   CURRENT_BIZ=biz;
   DRILL_OPEN=false;
   ACT_SBU.clear();renderSBUPills();
-  // refresh subgroup/customer options
+  // refresh subgroup/customer — ALL = all businesses, otherwise scope to biz
   const fyBizRows=biz==='ALL'
     ?RAW.filter(r=>r['FY']===ACTIVE_FY)
     :RAW.filter(r=>r['FY']===ACTIVE_FY&&r['Business']===biz);
