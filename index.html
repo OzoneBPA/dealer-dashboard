@@ -182,7 +182,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none">
     <div class="up-icon" id="up-icon-el"><i class="ti ti-cloud-download"></i></div>
     <p class="up-title" id="up-title-el">Loading Dashboard Data…</p>
-    <p class="up-sub" id="up-sub-el">Fetching latest data from OneDrive, please wait.</p>
+    <p class="up-sub" id="up-sub-el">Loading latest data from GitHub…</p>
     <div id="up-spinner" style="margin:1rem auto;width:36px;height:36px;border:3px solid #E5E7EB;border-top-color:#7F77DD;border-radius:50%;animation:spin .8s linear infinite"></div>
     <p class="err" id="err"></p>
     <div id="manual-fallback" style="display:none;margin-top:1rem;border-top:1px solid #E5E7EB;padding-top:1rem">
@@ -200,6 +200,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="top-bar">
     <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
       <span class="dash-title">Direct Dealer Dashboard</span>
+      <span id="last-updated-pill" style="display:none;font-size:10px;padding:3px 10px;border-radius:20px;background:#D1FAE5;color:#065F46;font-weight:600;margin-left:8px"></span>
       <span class="pill pill-fy" id="fy-badge"></span>
       <span class="pill pill-mtd" id="mtd-badge"></span>
     </div>
@@ -207,7 +208,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <button class="icon-btn danger" id="clear-all-btn" onclick="clearAllFilters()" style="display:none">
         <i class="ti ti-filter-off" style="font-size:13px"></i> Clear all filters
       </button>
-      <button class="icon-btn" onclick="autoFetchFromSharePoint();document.getElementById('upload-screen').style.display='flex';document.getElementById('dash').style.display='none';document.getElementById('up-spinner').style.display='block';document.getElementById('up-title-el').textContent='Refreshing data…';document.getElementById('up-sub-el').textContent='Fetching latest from OneDrive…';document.getElementById('manual-fallback').style.display='none';" style="color:#059669;border-color:#6EE7B7"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh Data</button>
+      <button class="icon-btn" onclick="autoFetchFromSharePoint();document.getElementById('upload-screen').style.display='flex';document.getElementById('dash').style.display='none';document.getElementById('up-spinner').style.display='block';document.getElementById('up-title-el').textContent='Refreshing data…';document.getElementById('up-sub-el').textContent='Fetching latest from OneDrive…';document.getElementById('manual-fallback').style.display='none';" style="color:#059669;border-color:#6EE7B7" title="Fetch latest data from GitHub"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh Data</button>
       <button class="icon-btn" onclick="resetApp()"><i class="ti ti-upload" style="font-size:13px"></i> Upload File</button>
     </div>
   </div>
@@ -396,20 +397,32 @@ let ACT_SBU=new Set(); // multi-select set of SBU names
 let CURRENT_PAGE='detail';
 
 // ── SHAREPOINT AUTO-FETCH ────────────────────────────────────────────────────
-const SHAREPOINT_URL = 'https://ozoneoverseas-my.sharepoint.com/:x:/g/personal/sagar_v_ozone-india_in/IQDFJdOJbYiCQZWo86h4-ouQAV3qPn3haO9RzCEv7BZXh2Q?e=mYxhP3&download=1';
+const SHAREPOINT_URL = 'https://raw.githubusercontent.com/AbhishekTaneja229/dealer-dashboard/main/data.json';
 
 async function autoFetchFromSharePoint() {
   try {
-    const response = await fetch(SHAREPOINT_URL);
+    // Fetch JSON from GitHub (no CORS issues, always public)
+    const response = await fetch(SHAREPOINT_URL + '?t=' + Date.now()); // cache-bust
     if (!response.ok) throw new Error('HTTP ' + response.status);
-    const arrayBuffer = await response.arrayBuffer();
-    processArrayBuffer(arrayBuffer);
+    const payload = await response.json();
+
+    // Show last updated info
+    if(payload.updated_at) {
+      document.getElementById('up-sub-el').textContent =
+        'Last updated: ' + payload.updated_at + '  |  ' + (payload.row_count||'').toLocaleString() + ' rows';
+    }
+
+    // Convert JSON records back to row format dashboard expects
+    const rows = payload.data || [];
+    if(!rows.length) throw new Error('No data in file');
+
+    initDashboard(rows, payload && payload.updated_at ? payload.updated_at : null);
   } catch(err) {
     console.warn('Auto-fetch failed:', err.message);
     document.getElementById('up-spinner').style.display='none';
     document.getElementById('up-icon-el').innerHTML='<i class="ti ti-alert-triangle" style="color:#F59E0B;font-size:40px"></i>';
-    document.getElementById('up-title-el').textContent='Could not auto-load data';
-    document.getElementById('up-sub-el').textContent='SharePoint link requires sign-in. Upload the file manually below.';
+    document.getElementById('up-title-el').textContent='Data not found';
+    document.getElementById('up-sub-el').textContent='Run update_data.bat on your laptop first to push data, or upload manually below.';
     document.getElementById('manual-fallback').style.display='block';
   }
 }
@@ -421,7 +434,7 @@ function processArrayBuffer(arrayBuffer) {
     if(!rows.length) throw new Error('File is empty');
     if(!('Business' in rows[0])||!('BV' in rows[0])||!('Months' in rows[0])||!('Customer Code' in rows[0]))
       throw new Error('Missing required columns');
-    initDashboard(rows);
+    initDashboard(rows, payload && payload.updated_at ? payload.updated_at : null);
   } catch(err) {
     document.getElementById('up-spinner').style.display='none';
     document.getElementById('manual-fallback').style.display='block';
@@ -429,13 +442,16 @@ function processArrayBuffer(arrayBuffer) {
   }
 }
 
-function initDashboard(rows) {
+function initDashboard(rows, updatedAt) {
   RAW=rows;
   ALL_FYS=[...new Set(rows.map(r=>r['FY']||'').filter(Boolean))].sort();
   ACTIVE_FY=ALL_FYS[ALL_FYS.length-1];
   initFilters(); buildFYTabs();
   document.getElementById('upload-screen').style.display='none';
   document.getElementById('dash').style.display='block';
+  // Show last updated
+  const pill = document.getElementById('last-updated-pill');
+  if(pill && updatedAt){ pill.textContent = 'Updated: '+updatedAt; pill.style.display='inline'; }
   setPage('detail'); switchBiz('HW');
 }
 
@@ -457,7 +473,7 @@ function load(file){
       const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
       if(!rows.length){showErr('File is empty');return}
       if(!('Business' in rows[0])||!('BV' in rows[0])||!('Months' in rows[0])||!('Customer Code' in rows[0])){showErr('Missing required columns');return}
-      initDashboard(rows);
+      initDashboard(rows, payload && payload.updated_at ? payload.updated_at : null);
     }catch(err){showErr('Error: '+err.message)}
   };
   r.readAsArrayBuffer(file);
