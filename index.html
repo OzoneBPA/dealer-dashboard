@@ -642,10 +642,16 @@ function renderOverviewAndTrend(){
   document.getElementById('mtd-badge').textContent='MTD: '+(mtdM||'—');
 
   // ── Donut chart — DD count per business (respects all filters) ──
-  const donutData=BIZ_LIST.map(b=>analyseFor(b).totalDD);
-  const donutColors=['#EA580C','#059669','#7C3AED'];
+    // Donut: always show all 3 biz DD counts (filter-aware), highlight active biz
+  const donutAllData=BIZ_LIST.map(b=>analyseFor(b).totalDD);
+  const donutColorsBase=['#EA580C','#059669','#7C3AED'];
   const donutLabels=['HW','ERG','ST'];
-  const donutTotal=donutData.reduce((s,v)=>s+v,0);
+  const donutTotal=donutAllData.reduce((s,v)=>s+v,0);
+  // Inactive slices get 25% opacity when a specific biz is selected
+  const donutColors=donutLabels.map((lbl,i)=>{
+    if(CURRENT_BIZ==='ALL') return donutColorsBase[i];
+    return lbl===CURRENT_BIZ ? donutColorsBase[i] : donutColorsBase[i]+'40';
+  });
 
   if(CHARTS['donut']){CHARTS['donut'].destroy();delete CHARTS['donut']}
   setTimeout(()=>{
@@ -656,20 +662,19 @@ function renderOverviewAndTrend(){
       data:{
         labels:donutLabels,
         datasets:[{
-          data:donutData,
+          data:donutAllData,
           backgroundColor:donutColors,
           borderColor:'#fff',
           borderWidth:3,
-          hoverBorderWidth:3,
-          hoverOffset:6
+          hoverOffset:8
         }]
       },
       options:{
         responsive:true,
         maintainAspectRatio:false,
-        cutout:'68%',
+        cutout:'62%',
         plugins:{
-          legend:{display:true,position:'bottom',labels:{font:{size:10},padding:8,usePointStyle:true,pointStyleWidth:8}},
+          legend:{display:false},
           tooltip:{callbacks:{
             label:v=>v.label+': '+fmtInt(v.raw)+' DD ('+Math.round(v.raw/Math.max(donutTotal,1)*100)+'%)'
           }}
@@ -679,16 +684,19 @@ function renderOverviewAndTrend(){
         id:'donutCenter',
         afterDraw(chart){
           const {ctx,chartArea:{top,bottom,left,right}}=chart;
-          const cx=(left+right)/2, cy=(top+bottom)/2;
+          const cx=(left+right)/2,cy=(top+bottom)/2;
           ctx.save();
+          const activeIdx=CURRENT_BIZ==='ALL'?-1:donutLabels.indexOf(CURRENT_BIZ);
+          const centerVal=activeIdx>=0?donutAllData[activeIdx]:donutTotal;
+          const centerLbl=activeIdx>=0?CURRENT_BIZ+' DD':'Total DD';
           ctx.font='800 20px -apple-system,sans-serif';
           ctx.fillStyle='#111827';
           ctx.textAlign='center';
           ctx.textBaseline='middle';
-          ctx.fillText(fmtInt(donutTotal),cx,cy-7);
+          ctx.fillText(fmtInt(centerVal),cx,cy-8);
           ctx.font='500 10px -apple-system,sans-serif';
           ctx.fillStyle='#9CA3AF';
-          ctx.fillText('Total DD',cx,cy+9);
+          ctx.fillText(centerLbl,cx,cy+10);
           ctx.restore();
         }
       },{
@@ -698,32 +706,30 @@ function renderOverviewAndTrend(){
           const meta=chart.getDatasetMeta(0);
           ctx.save();
           meta.data.forEach((arc,i)=>{
-            const val=donutData[i];
+            const val=donutAllData[i];
             if(!val)return;
             const pct=Math.round(val/Math.max(donutTotal,1)*100);
             if(pct<5)return;
-            // Position label outside slice with a line
+            const isActive=CURRENT_BIZ==='ALL'||donutLabels[i]===CURRENT_BIZ;
             const angle=(arc.startAngle+arc.endAngle)/2;
-            const outerR=arc.outerRadius;
-            const midX=arc.x+Math.cos(angle)*(arc.innerRadius+(outerR-arc.innerRadius)*0.5);
-            const midY=arc.y+Math.sin(angle)*(arc.innerRadius+(outerR-arc.innerRadius)*0.5);
-            // Label on slice
+            const midR=arc.innerRadius+(arc.outerRadius-arc.innerRadius)*0.5;
+            const midX=arc.x+Math.cos(angle)*midR;
+            const midY=arc.y+Math.sin(angle)*midR;
+            ctx.globalAlpha=isActive?1:0.4;
             ctx.font='700 10px -apple-system,sans-serif';
             ctx.fillStyle='#fff';
             ctx.textAlign='center';
             ctx.textBaseline='middle';
             ctx.fillText(donutLabels[i],midX,midY-6);
             ctx.font='600 9px -apple-system,sans-serif';
-            ctx.fillText(fmtInt(val)+' DD',midX,midY+5);
+            ctx.fillText(fmtInt(val)+' DD',midX,midY+6);
+            ctx.globalAlpha=1;
           });
           ctx.restore();
         }
       }]
     });
-
-
   },50);
-
   // Combined trend chart
   if(CHARTS['trend-all']){CHARTS['trend-all'].destroy();delete CHARTS['trend-all']}
   const allMonths=MONTH_ORDER.filter(m=>[...new Set(allFYRows.map(r=>r['Months']||''))].includes(m));
