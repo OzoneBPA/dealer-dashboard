@@ -1227,232 +1227,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-// ── STATE ──────────────────────────────────────────────────────
-let RAW=[], ACTIVE_FY='', ALL_FYS=[];
-let CURRENT_BIZ='ALL', CURRENT_PAGE='detail';
-let DRILL_OPEN=false;
-const CHARTS={};
-const ACT_SBU=new Set();
-const MONTH_ORDER=['April','May','June','July','August','September','October','November','December','January','February','March'];
-const BIZ_LIST=['HW','ERG','ST'];
-const BIZ_CFG={
-  HW: {acc:'#EA580C',line:'#FB923C',cls:'hw',label:'HW'},
-  ERG:{acc:'#059669',line:'#34D399',cls:'erg',label:'ERG'},
-  ST: {acc:'#7C3AED',line:'#A78BFA',cls:'st',label:'ST'}
-};
-const CAT_GRAD=['linear-gradient(135deg,#F59E0B,#F97316)','linear-gradient(135deg,#2563EB,#06B6D4)','linear-gradient(135deg,#0D9488,#059669)','linear-gradient(135deg,#7C3AED,#9333EA)','linear-gradient(135deg,#DC2626,#E11D48)','linear-gradient(135deg,#374151,#4B5563)','linear-gradient(135deg,#B45309,#D97706)','linear-gradient(135deg,#0E7490,#0284C7)'];
-const CAT_ICONS=['🏷️','🖥️','🤝','🎁','🎀','📦','🔑','🪟'];
-const FS={month:{all:[],pend:[],act:[]},state:{all:[],pend:[],act:[]},subgroup:{all:[],pend:[],act:[]},customer:{all:[],pend:[],act:[]}};
-
-// ── AUTO-FETCH ─────────────────────────────────────────────────
-const DATA_URL='https://raw.githubusercontent.com/AbhishekTaneja229/dealer-dashboard/main/data.json';
-async function autoFetchFromSharePoint(){
-  try{
-    const resp=await fetch(DATA_URL+'?t='+Date.now());
-    if(!resp.ok) throw new Error('HTTP '+resp.status);
-    const payload=await resp.json();
-    const rows=payload.data||[];
-    if(!rows.length) throw new Error('No data');
-    initDashboard(rows,payload.updated_at);
-  }catch(err){
-    document.getElementById('up-spinner').style.display='none';
-    document.getElementById('up-icon-el').innerHTML='<i class="ti ti-alert-triangle" style="color:#F59E0B;font-size:40px"></i>';
-    document.getElementById('up-title-el').textContent='Data not found';
-    document.getElementById('up-sub-el').textContent='Run update_data.bat on your laptop first, or upload manually.';
-    document.getElementById('manual-fallback').style.display='block';
-  }
-}
-window.addEventListener('DOMContentLoaded',()=>autoFetchFromSharePoint());
-
-function refreshData(){
-  document.getElementById('dash').style.display='none';
-  document.getElementById('upload-screen').style.display='flex';
-  document.getElementById('up-spinner').style.display='block';
-  document.getElementById('up-icon-el').innerHTML='<i class="ti ti-cloud-download"></i>';
-  document.getElementById('up-title-el').textContent='Refreshing data…';
-  document.getElementById('up-sub-el').textContent='Fetching latest from GitHub…';
-  document.getElementById('manual-fallback').style.display='none';
-  autoFetchFromSharePoint();
-}
-
-const dz=document.getElementById('drop-zone');
-dz.addEventListener('dragover',e=>{e.preventDefault()});
-dz.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0])});
-document.getElementById('file-input').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0])});
-function showErr(m){const el=document.getElementById('err');el.textContent=m;el.style.display='block'}
-function loadFile(file){
-  const r=new FileReader();
-  r.onload=e=>{
-    try{
-      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
-      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
-      initDashboard(rows,null);
-    }catch(err){showErr('Error: '+err.message)}
-  };
-  r.readAsArrayBuffer(file);
-}
-
-function initDashboard(rows,updatedAt){
-  RAW=rows;
-  ALL_FYS=[...new Set(rows.map(r=>r['FY']||'').filter(Boolean))].sort();
-  ACTIVE_FY=ALL_FYS[ALL_FYS.length-1];
-  CURRENT_BIZ='ALL';
-  initFilters();buildFYTabs();
-  document.getElementById('upload-screen').style.display='none';
-  document.getElementById('dash').style.display='block';
-  const pill=document.getElementById('last-updated-pill');
-  if(pill&&updatedAt){pill.textContent='Updated: '+updatedAt;pill.style.display='inline'}
-  CURRENT_BIZ='ALL';
-  setPage('detail');
-}
-function resetApp(){
-  document.getElementById('dash').style.display='none';
-  document.getElementById('upload-screen').style.display='flex';
-  document.getElementById('up-spinner').style.display='none';
-  document.getElementById('manual-fallback').style.display='block';
-  document.getElementById('up-icon-el').innerHTML='<i class="ti ti-file-spreadsheet"></i>';
-  document.getElementById('up-title-el').textContent='Upload Excel File';
-  document.getElementById('up-sub-el').textContent='Drop your file or click to browse';
-  document.getElementById('file-input').value='';
-  RAW=[];
-  Object.values(CHARTS).forEach(c=>{try{c.destroy()}catch(e){}});
-}
-
-// ── FY TABS ────────────────────────────────────────────────────
-function buildFYTabs(){
-  document.getElementById('fy-tabs').innerHTML=ALL_FYS.map(fy=>`<button class="fy-tab${fy===ACTIVE_FY?' active':''}" onclick="setFY('${fy}')">${fy}</button>`).join('');
-}
-function setFY(fy){
-  ACTIVE_FY=fy;
-  document.querySelectorAll('.fy-tab').forEach(t=>t.classList.toggle('active',t.textContent===fy));
-  document.getElementById('fy-badge').textContent=fy;
-  ACT_SBU.clear();renderSBUPills();
-  initFilters();
-  if(CURRENT_PAGE==='detail')renderDetail();else renderSummary();
-}
-function setPage(pg){
-  CURRENT_PAGE=pg;
-  document.getElementById('detail-page').style.display=pg==='detail'?'block':'none';
-  document.getElementById('summary-page').style.display=pg==='summary'?'block':'none';
-  document.querySelectorAll('.page-tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('ptab-'+pg).classList.add('active');
-  if(pg==='detail')renderDetail();else renderSummary();
-}
-
-// ── FILTERS ────────────────────────────────────────────────────
-function getMTD(rows){
-  const months=[...new Set(rows.map(r=>r['Months']||'').filter(Boolean))];
-  return MONTH_ORDER.filter(m=>months.includes(m)).slice(-1)[0]||'';
-}
-function fmt(n){return n.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}
-function fmtInt(n){return n.toLocaleString('en-IN',{maximumFractionDigits:0})}
-
-// ── RENDER DETAIL ──────────────────────────────────────────────
-function renderStateTableRows(d){
-  // Get state-level data including mtd
-  const biz=CURRENT_BIZ; // may be 'ALL'
-  const rows=getFilteredRows(biz);
-  const mtdM=getMTD(rows);
-  const mtdRows=rows.filter(r=>r['Months']===mtdM);
-  const bvSum=a=>a.reduce((s,r)=>s+(parseFloat(r['BV'])||0),0);
-  const uniq=a=>[...new Set(a.map(r=>r['Customer Code']).filter(Boolean))].length;
-
-  const stateMap={};
-  rows.forEach(r=>{
-    const st=r['Customer State']||'Other';
-    if(!stateMap[st])stateMap[st]={ytdBV:0,mtdBV:0,ytdD:new Set(),mtdD:new Set(),allD:new Set()};
-    stateMap[st].ytdBV+=parseFloat(r['BV'])||0;
-    if(r['Customer Code']){stateMap[st].ytdD.add(r['Customer Code']);stateMap[st].allD.add(r['Customer Code'])}
-  });
-  mtdRows.forEach(r=>{
-    const st=r['Customer State']||'Other';
-    if(!stateMap[st])stateMap[st]={ytdBV:0,mtdBV:0,ytdD:new Set(),mtdD:new Set(),allD:new Set()};
-    stateMap[st].mtdBV+=parseFloat(r['BV'])||0;
-    if(r['Customer Code'])stateMap[st].mtdD.add(r['Customer Code']);
-  });
-
-  // All-time DD per state for this biz (ALL = across all businesses)
-  const allBase=biz==='ALL'?RAW:RAW.filter(r=>r['Business']===biz);
-  const allStateDD={};
-  allBase.forEach(r=>{const st=r['Customer State']||'Other';if(!allStateDD[st])allStateDD[st]=new Set();if(r['Customer Code'])allStateDD[st].add(r['Customer Code'])});
-
-  return Object.entries(stateMap).sort((a,b)=>b[1].ytdBV-a[1].ytdBV).map(([st,v])=>{
-    const totalDD=(allStateDD[st]||new Set()).size;
-    const ytdA=v.ytdD.size, mtdA=v.mtdD.size;
-    const pct=totalDD>0?Math.round(ytdA/totalDD*100):0;
-    return`<tr>
-      <td class="td-state">${st}</td>
-      <td class="td-num">${fmtInt(totalDD)}</td>
-      <td class="td-num">${fmtInt(ytdA)}</td>
-      <td class="td-num">${fmtInt(mtdA)}</td>
-      <td class="td-num">₹${fmt(v.ytdBV)}</td>
-      <td class="td-num">₹${fmt(v.ytdBV)}</td>
-      <td class="td-num">₹${fmt(v.mtdBV)}</td>
-      <td class="td-num">${pct}%</td>
-    </tr>`;
-  }).join('');
-}
-
-function renderFilterChips(){
-  const el=document.getElementById('filter-chips-row');
-  if(!el)return;
-  el.innerHTML='';
-  // Month chip
-  if(FS.month.act.length<FS.month.all.length){
-    const sp=makeChip('Months: '+FS.month.act.slice(0,2).join(', ')+(FS.month.act.length>2?'…':''));
-    sp.querySelector('i.rm').addEventListener('click',()=>{resetFilter('month')});
-    el.appendChild(sp);
-  }
-  // State chip
-  if(FS.state.act.length<FS.state.all.length){
-    const lbl=FS.state.act.length===1?FS.state.act[0]:FS.state.act.length+' States';
-    const sp=makeChip(lbl,'ti-map-pin');
-    sp.querySelector('i.rm').addEventListener('click',()=>{resetFilter('state')});
-    el.appendChild(sp);
-  }
-  // Subgroup chip
-  if(FS.subgroup.act.length<FS.subgroup.all.length){
-    const lbl=FS.subgroup.act.length===1?FS.subgroup.act[0]:FS.subgroup.act.length+' Sub-Groups';
-    const sp=makeChip(lbl,'ti-tag');
-    sp.querySelector('i.rm').addEventListener('click',()=>{resetFilter('subgroup')});
-    el.appendChild(sp);
-  }
-  // Customer chip
-  if(FS.customer.act.length<FS.customer.all.length){
-    const lbl=FS.customer.act.length===1?FS.customer.act[0]:FS.customer.act.length+' Customers';
-    const sp=makeChip(lbl,'ti-user');
-    sp.querySelector('i.rm').addEventListener('click',()=>{resetFilter('customer')});
-    el.appendChild(sp);
-  }
-  // SBU chips
-  [...ACT_SBU].forEach(sbu=>{
-    const sp=makeChip('SBU: '+sbu,'ti-layout-grid','#7C3AED','#EDE9FE','#C4B5FD');
-    sp.querySelector('i.rm').addEventListener('click',()=>{removeSBU(sbu)});
-    el.appendChild(sp);
-  });
-  // Clear all chip if multiple filters
-  const total=(FS.month.act.length<FS.month.all.length?1:0)+(FS.state.act.length<FS.state.all.length?1:0)+(FS.subgroup.act.length<FS.subgroup.all.length?1:0)+(FS.customer.act.length<FS.customer.all.length?1:0)+ACT_SBU.size;
-  if(total>1){
-    const sp=makeChip('Clear all','ti-filter-off','#DC2626','#FEF2F2','#FECACA',true);
-    sp.style.cursor='pointer';
-    sp.addEventListener('click',()=>{clearAllFilters()});
-    el.appendChild(sp);
-  }
-}
-function makeChip(label,icon='ti-filter',textColor='#4338CA',bg='#EEF2FF',border='#C7D2FE',noX=false){
-  const sp=document.createElement('span');
-  sp.style.cssText='display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;background:'+bg+';border:1px solid '+border+';font-size:11px;font-weight:600;color:'+textColor+';white-space:nowrap';
-  sp.innerHTML='<i class="ti '+icon+'" style="font-size:11px"></i>'+label+(noX?'':'<i class="ti ti-x rm" style="font-size:10px;cursor:pointer;margin-left:2px"></i>');
-  return sp;
-}
-function resetFilter(key){FS[key].act=[...FS[key].all];FS[key].pend=[...FS[key].all];updateDDBadge(key);if(CURRENT_PAGE==='detail')renderDetail();else renderSummary()}
-
-function toggleDrill(){
-  DRILL_OPEN=!DRILL_OPEN;
-  document.getElementById('drill-btn').classList.toggle('open',DRILL_OPEN);
-  document.getElementById('drill-section').style.display=DRILL_OPEN?'block':'none';
-  if(DRILL_OPEN) requestAnimationFrame(()=>renderDrillTable());
-}
 
 function renderSBUCards(d,cfg){
   const sbuTotal=d.sbuTotal||1;
@@ -1461,110 +1235,28 @@ function renderSBUCards(d,cfg){
   grid.innerHTML=d.sbus.length
     ?d.sbus.map((s,i)=>{
         const p=Math.round(s.bv/sbuTotal*100);const sel=ACT_SBU.has(s.name);
-        return`<div class="cat-card${sel?' sel':''}" style="background:${CAT_GRAD[i%CAT_GRAD.length]}" onclick="toggleSBU('${s.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">
-          <div class="cc-c1"></div><div class="cc-c2"></div>
-          ${sel?'<div style="position:absolute;top:10px;right:10px;z-index:2;background:rgba(255,255,255,.25);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:13px;color:#fff"></i></div>':''}
-          <span class="cc-icon">${CAT_ICONS[i%CAT_ICONS.length]}</span>
-          <div class="cc-name">${s.name.toUpperCase().slice(0,28)}</div>
-          <div class="cc-val">₹${fmt(s.bv)}</div>
-          <div class="cc-pct">${p}% of total · ${s.dealers} DD</div>
-          <div class="cc-prog"><div class="cc-fill" style="width:${p}%"></div></div>
-        </div>`}).join('')
+        return '<div class="cat-card'+(sel?' sel':'')+'" style="background:'+CAT_GRAD[i%CAT_GRAD.length]+'" onclick="toggleSBU(''+s.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'')"><div class="cc-c1"></div><div class="cc-c2"></div>'
+          +(sel?'<div style="position:absolute;top:10px;right:10px;z-index:2;background:rgba(255,255,255,.25);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:13px;color:#fff"></i></div>':'')
+          +'<span class="cc-icon">'+CAT_ICONS[i%CAT_ICONS.length]+'</span>'
+          +'<div class="cc-name">'+s.name.toUpperCase().slice(0,28)+'</div>'
+          +'<div class="cc-val">₹'+fmt(s.bv)+'</div>'
+          +'<div class="cc-pct">'+p+'% of total · '+s.dealers+' DD</div>'
+          +'<div class="cc-prog"><div class="cc-fill" style="width:'+p+'%"></div></div>'
+          +'</div>';
+      }).join('')
     :'<div class="no-data">No SBU data</div>';
   grid.classList.toggle('has-sel',ACT_SBU.size>0);
 }
 
-// ── SBU MULTI-SELECT ───────────────────────────────────────────
-function toggleSBU(name){
-  if(ACT_SBU.has(name)){ACT_SBU.delete(name)}else{ACT_SBU.add(name)}
-  renderSBUPills();renderContent();updateClearAllBtn();
-}
-function clearSBU(){ACT_SBU.clear();renderSBUPills();renderContent();updateClearAllBtn()}
-function removeSBU(name){ACT_SBU.delete(name);renderSBUPills();renderContent();updateClearAllBtn()}
-function renderSBUPills(){
-  const wrap=document.getElementById('sbu-pills-wrap');
-  if(ACT_SBU.size===0){wrap.innerHTML='';return}
-  wrap.innerHTML=[...ACT_SBU].map(name=>`<span class="sbu-pill"><i class="ti ti-layout-grid" style="font-size:12px"></i><span>${name}</span><i class="ti ti-x" style="font-size:11px;cursor:pointer" onclick="removeSBU('${name.replace(/'/g,"\\'")}')"></i></span>`).join('')
-    +(ACT_SBU.size>1?`<span class="sbu-pill" style="background:#EF4444" onclick="clearSBU()"><i class="ti ti-x" style="font-size:11px"></i> Clear all</span>`:'');
+function toggleDrill(){
+  DRILL_OPEN=!DRILL_OPEN;
+  const btn=document.getElementById('drill-btn');
+  if(btn)btn.classList.toggle('open',DRILL_OPEN);
+  const sec=document.getElementById('drill-section');
+  if(sec)sec.style.display=DRILL_OPEN?'block':'none';
+  if(DRILL_OPEN) requestAnimationFrame(()=>renderDrillTable());
 }
 
-// ── SUMMARY ────────────────────────────────────────────────────
-const sumCharts={};
-function renderSummary(){
-  document.getElementById('fy-badge').textContent=ACTIVE_FY;
-  document.getElementById('sum-overview-cards').innerHTML=BIZ_LIST.map(biz=>{
-    const d=analyseFor(biz);const cfg=BIZ_CFG[biz];
-    const pct=d.totalDD>0?Math.round(d.ytdActive/d.totalDD*100):0;
-    const gradMap={HW:'linear-gradient(135deg,#C2410C,#EA580C)',ERG:'linear-gradient(135deg,#065F46,#10B981)',ST:'linear-gradient(135deg,#5B21B6,#8B5CF6)'};
-    return`<div class="sum-card" style="background:${gradMap[biz]}">
-      <div class="sum-card-title">${biz} — ${ACTIVE_FY}</div>
-      <div class="sum-stat"><span class="sum-stat-lbl">Total DD</span><span class="sum-stat-val">${fmtInt(d.totalDD)}</span></div>
-      <div class="sum-stat"><span class="sum-stat-lbl">YTD Billed (₹ L)</span><span class="sum-stat-val">${fmt(d.ytdBV)}</span></div>
-      <div class="sum-stat"><span class="sum-stat-lbl">MTD Billed (₹ L)</span><span class="sum-stat-val">${fmt(d.mtdBV)}</span></div>
-      <div class="sum-stat"><span class="sum-stat-lbl">YTD Active</span><span class="sum-stat-val">${fmtInt(d.ytdActive)}</span></div>
-      <div class="sum-stat"><span class="sum-stat-lbl">MTD Active</span><span class="sum-stat-val">${fmtInt(d.mtdActive)}</span></div>
-      <div class="sum-stat"><span class="sum-stat-lbl">Active %</span><span class="sum-stat-val">${pct}%</span></div>
-    </div>`;
-  }).join('');
-  Object.values(sumCharts).forEach(c=>{try{c.destroy()}catch(e){}});
-  document.getElementById('sum-trend-row').innerHTML=BIZ_LIST.map(biz=>
-  `<div class="sum-trend-card" id="stc-${biz}">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
-      <div class="sum-trend-title" style="color:${BIZ_CFG[biz].acc};margin-bottom:0">${biz} — Monthly Billing (₹ L)</div>
-      <button id="sfb-${biz}" onclick="sumFocus('${biz}')" style="border:1px solid ${BIZ_CFG[biz].acc}55;background:${BIZ_CFG[biz].acc}11;color:${BIZ_CFG[biz].acc};border-radius:8px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">⛶ Focus</button>
-    </div>
-    <div class="sum-trend-wrap" id="stw-${biz}"><canvas id="sc-${biz}"></canvas></div>
-  </div>`
-).join('');
-  setTimeout(()=>{
-    BIZ_LIST.forEach(biz=>{
-      const d=analyseFor(biz);const cfg=BIZ_CFG[biz];
-      sumCharts[biz]=new Chart(document.getElementById('sc-'+biz),{
-        type:'line',
-        data:{labels:d.monthTrend.map(m=>m.month.slice(0,3)),datasets:[{data:d.monthTrend.map(m=>m.bv),borderColor:cfg.line,backgroundColor:cfg.line+'22',fill:true,tension:0.42,pointRadius:4,pointBackgroundColor:cfg.line,pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:2.5}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+'L'}}},scales:{x:{ticks:{font:{size:10}},grid:{display:false}},y:{display:false}},layout:{padding:{top:18}}},
-        plugins:[{id:'dls',afterDatasetsDraw(chart){const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);const ds=chart.data.datasets[0];ctx.save();ctx.font='700 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillStyle=cfg.acc;meta.data.forEach((pt,i)=>{ctx.fillText('₹'+fmt(ds.data[i]),pt.x,pt.y-10)});ctx.restore();}}]
-      });
-    });
-  },50);
-  const allRows=[];
-  BIZ_LIST.forEach(biz=>{
-    const d=analyseFor(biz);let ytdRunBV=0;const ytdRunA=new Set();
-    d.monthTrend.forEach(m=>{ytdRunBV+=m.bv;getFilteredRows(biz).filter(r=>r['Months']===m.month).forEach(r=>{if(r['Customer Code'])ytdRunA.add(r['Customer Code'])});allRows.push({biz,month:m.month,bv:m.bv,active:m.active,ytdBV:ytdRunBV,ytdActive:ytdRunA.size})});
-  });
-  document.getElementById('sum-table-body').innerHTML=allRows.map(r=>`<tr><td><span class="sum-biz-badge biz-${r.biz.toLowerCase()}">${r.biz}</span></td><td>${r.month}</td><td>₹${fmt(r.bv)}</td><td>${fmtInt(r.active)}</td><td>₹${fmt(r.ytdBV)}</td><td>${fmtInt(r.ytdActive)}</td></tr>`).join('');
-}
-
-// ── DROPDOWN SYSTEM ────────────────────────────────────────────
-function buildDD_list(key,query){
-  const all=FS[key].all;const pend=FS[key].pend;
-  const q=(query||'').toLowerCase();
-  const filtered=all.filter(s=>!q||s.toLowerCase().includes(q));
-  const el=document.getElementById('flist-'+key);
-  if(!el)return;
-  el.innerHTML=filtered.length?filtered.map(s=>`<label class="fd-item"><input type="checkbox" ${pend.includes(s)?'checked':''} onchange="toggleItem('${key}','${s.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}',this.checked)">${s}</label>`).join(''):'<div style="padding:10px 13px;color:#9CA3AF;font-size:12px">No results</div>';
-}
-function toggleItem(key,val,checked){let p=[...FS[key].pend];if(checked){if(!p.includes(val))p.push(val)}else{p=p.filter(s=>s!==val)}FS[key].pend=p}
-const DD_LABELS={month:['All Months','month'],state:['All States','state'],subgroup:['All Sub-Groups','sub-group'],customer:['All Customers','customer']};
-function updateDDBadge(key){
-  const all=FS[key].all,act=FS[key].act;
-  const badge=document.getElementById('fbadge-'+key);const label=document.getElementById('fl-'+key);const btn=document.getElementById('fb-'+key);
-  if(!badge||!label||!btn)return;
-  const[allLbl,sing]=DD_LABELS[key];
-  if(act.length===all.length||act.length===0){badge.style.display='none';label.textContent=allLbl;btn.classList.remove('active-filter')}
-  else{badge.style.display='inline';badge.textContent=act.length;label.textContent=act.length===1?act[0]:act.length+' '+sing+'s';btn.classList.add('active-filter')}
-}
-function toggleDD(key){FS[key].pend=[...FS[key].act];buildDD_list(key);const dd=document.getElementById('fd-'+key);const wasOpen=dd.classList.contains('open');document.querySelectorAll('.filter-dropdown').forEach(d=>d.classList.remove('open'));if(!wasOpen)dd.classList.add('open')}
-function selectAllDD(key){FS[key].pend=[...FS[key].all];buildDD_list(key,document.getElementById('fs-'+key).value)}
-function clearDD(key){FS[key].pend=[];buildDD_list(key,document.getElementById('fs-'+key).value)}
-function cancelDD(key){FS[key].pend=[...FS[key].act];document.getElementById('fd-'+key).classList.remove('open');document.getElementById('fs-'+key).value=''}
-function applyDD(key){FS[key].act=FS[key].pend.length?[...FS[key].pend]:[...FS[key].all];document.getElementById('fd-'+key).classList.remove('open');document.getElementById('fs-'+key).value='';updateDDBadge(key);if(CURRENT_PAGE==='detail')renderDetail();else renderSummary()}
-function searchDD(key){buildDD_list(key,document.getElementById('fs-'+key).value)}
-document.addEventListener('click',e=>{['month','state','subgroup','customer'].forEach(key=>{const fw=document.getElementById('fw-'+key);if(fw&&!fw.contains(e.target))document.getElementById('fd-'+key).classList.remove('open')})});
-
-function isAnyFilterActive(){return Object.keys(FS).some(k=>FS[k].act.length<FS[k].all.length)||ACT_SBU.size>0}
-function updateClearAllBtn(){document.getElementById('clear-all-btn').style.display=isAnyFilterActive()?'flex':'none'}
-function clearAllFilters(){Object.keys(FS).forEach(k=>{FS[k].act=[...FS[k].all];FS[k].pend=[...FS[k].all]});Object.keys(FS).forEach(k=>updateDDBadge(k));ACT_SBU.clear();renderSBUPills();if(CURRENT_PAGE==='detail')renderDetail();else renderSummary();updateClearAllBtn()}
 </script>
 </body>
 </html>
