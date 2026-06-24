@@ -198,6 +198,103 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .vtab.all{background:linear-gradient(150deg,#374151,#4B5563);box-shadow:0 4px 14px rgba(55,65,81,.25)}
 .biz-hw{background:#1D4ED8}.biz-erg{background:#0F6E56}.biz-st{background:#7C3AED}
 .no-data{text-align:center;color:#9CA3AF;font-size:13px;padding:1.5rem;grid-column:1/-1}
+
+/* ══════════════════════════════════════════════
+   MOBILE RESPONSIVE — max-width 768px
+   ══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  body{padding:.75rem}
+
+  /* Top bar */
+  .top-bar{flex-direction:column;align-items:flex-start;gap:.5rem}
+  .dash-title{font-size:16px}
+  .top-right{gap:6px;flex-wrap:wrap}
+  .icon-btn{padding:6px 10px;font-size:11px}
+
+  /* FY row */
+  .fy-row{flex-wrap:wrap;width:100%}
+  .fy-tab{padding:6px 12px;font-size:11px}
+  .page-tab{padding:6px 10px;font-size:11px}
+
+  /* Filters */
+  .filters-bar{gap:6px}
+  .filter-btn{padding:6px 10px;font-size:11px}
+  .filter-dropdown{width:220px}
+
+  /* Top section: stack overview + trend vertically */
+  .top-section{grid-template-columns:1fr;gap:10px}
+  .overview-card{padding:1rem 1.2rem;min-height:auto}
+  .ov-val{font-size:15px}
+  .trend-wrap{min-height:160px}
+
+  /* Biz tabs: wrap, smaller */
+  .vtabs{gap:6px}
+  .vtab{padding:.5rem .9rem;min-width:70px;border-radius:12px}
+  .vtab-name{font-size:12px}
+  .vtab-dd{font-size:9px}
+
+  /* KPI chips: 2 per row on mobile */
+  .kpi-row{grid-template-columns:repeat(2,1fr);gap:7px}
+  .kpi-chip{padding:.7rem .8rem}
+  .kc-val{font-size:14px}
+  .kc-lbl{font-size:8px}
+
+  /* SBU cards: 2 per row on mobile */
+  .cat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .cat-card{padding:.65rem .75rem}
+  .cc-val{font-size:13px}
+
+  /* Drill down table: scrollable */
+  .drill-section{overflow-x:auto}
+  .drill-table{font-size:11px;min-width:600px}
+  .drill-table th,.drill-table td{padding:6px 8px}
+
+  /* State chart: taller for mobile readability */
+  .state-section{padding:.9rem}
+  #state-vchart-wrap{height:280px!important}
+
+  /* Summary cards: 1 per row */
+  .summary-grid{grid-template-columns:1fr}
+  .sum-trend-row{grid-template-columns:1fr}
+
+  /* FY badge pills: smaller */
+  .pill{font-size:10px;padding:2px 8px;margin-left:4px}
+  .pill-upd{font-size:9px;padding:2px 7px}
+}
+
+@media (max-width: 480px) {
+  body{padding:.5rem}
+  .dash-title{font-size:15px}
+
+  /* Stack pills below title */
+  .top-bar > div:first-child{flex-wrap:wrap;gap:3px}
+
+  /* FY tabs wrap tightly */
+  .fy-row{gap:0;padding:3px}
+  .fy-tab{padding:5px 10px;font-size:10px}
+  .page-tab{padding:5px 8px;font-size:10px}
+  .fy-separator{margin:0 2px}
+
+  /* 1 KPI chip per row on tiny screens */
+  .kpi-row{grid-template-columns:1fr 1fr}
+  .kc-val{font-size:13px}
+
+  /* Vtabs: 2 per row */
+  .vtabs{display:grid;grid-template-columns:repeat(2,1fr)}
+  .vtab-divider{display:none}
+  .vtab{min-width:unset;justify-content:center}
+
+  /* SBU: 1 per row */
+  .cat-grid{grid-template-columns:1fr 1fr}
+
+  /* Overview card rows */
+  .ov-val{font-size:14px}
+  .ov-lbl{font-size:10px}
+
+  /* Drill btn */
+  .drill-btn{font-size:11px;padding:6px 12px}
+}
+
 </style>
 </head>
 <body>
@@ -706,7 +803,7 @@ function renderContent(){
     <!-- State vertical bar chart -->
     <div class="state-section">
       <div class="state-title"><i class="ti ti-map" style="font-size:13px;color:${cfg.acc}"></i> Sale by State (₹ Lacs)</div>
-      <div style="position:relative;height:320px;width:100%">
+      <div id="state-vchart-wrap" style="position:relative;height:320px;width:100%">
         <canvas id="state-vchart" role="img" aria-label="Sale by state vertical bar chart"></canvas>
       </div>
     </div>`;
