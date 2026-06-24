@@ -86,10 +86,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 /* ── TOP SECTION: Overview card + Trend ── */
 .top-section{display:grid;grid-template-columns:260px 1fr;gap:14px;margin-bottom:1rem;align-items:stretch}
-.donut-card{background:#fff;border-radius:20px;padding:1.1rem 1rem;border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 16px rgba(0,0,0,.07);display:flex;flex-direction:column;align-items:center}
-.donut-title{font-size:10px;color:#9CA3AF;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:.6rem;align-self:flex-start}
-.donut-wrap{position:relative;width:100%;flex:1;min-height:200px}
-
+.overview-card{border-radius:20px;padding:1.4rem 1.6rem;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 8px 24px rgba(0,0,0,.13);position:relative;overflow:hidden;background:linear-gradient(135deg,#5B21B6,#7C3AED)}
+.overview-card::before{content:'';position:absolute;top:-30px;right:-30px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.08)}
+.overview-card::after{content:'';position:absolute;bottom:-20px;left:10px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06)}
+.ov-label{font-size:9px;font-weight:700;letter-spacing:1.2px;color:rgba(255,255,255,.5);margin-bottom:.9rem;text-transform:uppercase;position:relative;z-index:1}
+.ov-rows{display:flex;flex-direction:column;gap:0;flex:1;position:relative;z-index:1}
+.ov-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.12)}
+.ov-row:last-child{border-bottom:none}
+.ov-lbl{font-size:11px;color:rgba(255,255,255,.65);font-weight:500}
+.ov-val{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px}
 .trend-card{background:#fff;border-radius:20px;padding:1.2rem 1.4rem;border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 16px rgba(0,0,0,.06);display:flex;flex-direction:column}
 .trend-title{font-size:10px;color:#9CA3AF;margin-bottom:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
 .trend-wrap{position:relative;flex:1;min-height:130px}
@@ -103,7 +108,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .vtab::before{content:'';position:absolute;top:-20px;right:-20px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.1)}
 .vtab-name{font-size:14px;font-weight:800;color:#fff;letter-spacing:.5px;line-height:1}
 .vtab-dd{font-size:10px;color:rgba(255,255,255,.72);font-weight:600;white-space:nowrap}
-.vtab.hw{background:linear-gradient(135deg,#C2410C,#EA580C);box-shadow:0 4px 14px rgba(234,88,12,.3)}
+.vtab.hw{background:linear-gradient(135deg,#1D4ED8,#2563EB);box-shadow:0 4px 14px rgba(29,78,216,.25)}
 .vtab.erg{background:linear-gradient(135deg,#065F46,#059669);box-shadow:0 4px 14px rgba(5,150,105,.25)}
 .vtab.st{background:linear-gradient(135deg,#5B21B6,#7C3AED);box-shadow:0 4px 14px rgba(124,58,237,.25)}
 .vtab:hover{transform:translateY(-2px);opacity:.92}
@@ -194,109 +199,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .biz-hw{background:#EA580C}.biz-erg{background:#0F6E56}.biz-st{background:#7C3AED}
 .no-data{text-align:center;color:#9CA3AF;font-size:13px;padding:1.5rem;grid-column:1/-1}
 
-/* ══════════════════════════════════════════════
-   MOBILE RESPONSIVE — max-width 768px
-   ══════════════════════════════════════════════ */
-@media (max-width: 768px) {
-  body{padding:.75rem}
-
-  /* Top bar */
-  .top-bar{flex-direction:column;align-items:flex-start;gap:.5rem}
-  .dash-title{font-size:16px}
-  .top-right{gap:6px;flex-wrap:wrap}
-  .icon-btn{padding:6px 10px;font-size:11px}
-
-  /* FY row */
-  .fy-row{flex-wrap:wrap;width:100%}
-  .fy-tab{padding:6px 12px;font-size:11px}
-  .page-tab{padding:6px 10px;font-size:11px}
-
-  /* Filters */
-  .filters-bar{gap:6px}
-  .filter-btn{padding:6px 10px;font-size:11px}
-  .filter-dropdown{width:220px}
-
-  /* Top section: stack donut + trend vertically */
-  .top-section{grid-template-columns:1fr;gap:10px}
-  .donut-card{padding:1rem;min-height:240px}
-  .donut-wrap{min-height:140px}
-  .trend-wrap{min-height:160px}
-
-  /* Biz tabs: wrap, smaller */
-  .vtabs{gap:6px}
-  .vtab{padding:.5rem .9rem;min-width:70px;border-radius:12px}
-  .vtab-name{font-size:12px}
-  .vtab-dd{font-size:9px}
-
-  /* KPI chips: 2 per row on mobile */
-  .kpi-row{grid-template-columns:repeat(2,1fr);gap:7px}
-  .kpi-chip{padding:.7rem .8rem}
-  .kc-val{font-size:14px}
-  .kc-lbl{font-size:8px}
-
-  /* SBU cards: 2 per row on mobile */
-  .cat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  .cat-card{padding:.65rem .75rem}
-  .cc-val{font-size:13px}
-
-  /* Drill down table: scrollable */
-  .drill-section{overflow-x:auto}
-  .drill-table{font-size:11px;min-width:600px}
-  .drill-table th,.drill-table td{padding:6px 8px}
-
-  /* State chart: taller for mobile readability */
-  .state-section{padding:.9rem}
-  #state-vchart-wrap{height:280px!important}
-
-  /* Summary cards: 1 per row */
-  .summary-grid{grid-template-columns:1fr}
-  .sum-trend-row{grid-template-columns:1fr}
-
-  /* FY badge pills: smaller */
-  .pill{font-size:10px;padding:2px 8px;margin-left:4px}
-  .pill-upd{font-size:9px;padding:2px 7px}
-}
-
-@media (max-width: 480px) {
-  body{padding:.5rem}
-  .dash-title{font-size:15px}
-
-  /* Stack pills below title */
-  .top-bar > div:first-child{flex-wrap:wrap;gap:3px}
-
-  /* FY tabs wrap tightly */
-  .fy-row{gap:0;padding:3px}
-  .fy-tab{padding:5px 10px;font-size:10px}
-  .page-tab{padding:5px 8px;font-size:10px}
-  .fy-separator{margin:0 2px}
-
-  /* 1 KPI chip per row on tiny screens */
-  .kpi-row{grid-template-columns:1fr 1fr}
-  .kc-val{font-size:13px}
-
-  /* Vtabs: 2 per row */
-  .vtabs{display:grid;grid-template-columns:repeat(2,1fr)}
-  .vtab-divider{display:none}
-  .vtab{min-width:unset;justify-content:center}
-
-  /* SBU: 1 per row */
-  .cat-grid{grid-template-columns:1fr 1fr}
-
-  /* Overview card rows */
-  .ov-val{font-size:14px}
-  .ov-lbl{font-size:10px}
-
-  /* Drill btn */
-  .drill-btn{font-size:11px;padding:6px 12px}
-}
-
+.donut-card{background:#fff;border-radius:20px;padding:1.1rem 1rem;border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 16px rgba(0,0,0,.07);display:flex;flex-direction:column;align-items:center}
+.donut-title{font-size:10px;color:#9CA3AF;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:.6rem;align-self:flex-start}
+.donut-wrap{position:relative;width:100%;flex:1;min-height:200px}
 
 /* Summary focus mode */
-#sum-trend-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:1.2rem}
-.sum-trend-card.focused{border:2px solid currentColor}
 #sum-trend-row.has-focus .sum-trend-card:not(.focused){display:none}
-#sum-trend-row.has-focus{grid-template-columns:1fr}
-#sum-trend-row.has-focus .sum-trend-card.focused .sum-trend-wrap{height:380px!important}
+#sum-trend-row.has-focus .sum-trend-card.focused .sum-trend-wrap{height:360px!important}
 </style>
 </head>
 <body>
@@ -399,8 +308,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="top-section">
       <div class="donut-card">
         <div class="donut-title" id="donut-title-lbl"><i class="ti ti-chart-pie" style="font-size:12px;vertical-align:-1px"></i> YTD Active by Business</div>
-        <div class="donut-wrap"><canvas id="donut-chart" role="img" aria-label="Dealer count donut chart"></canvas></div>
-
+        <div class="donut-wrap"><canvas id="donut-chart" role="img" aria-label="Active DD donut"></canvas></div>
       </div>
       <div class="trend-card">
         <div class="trend-title">Monthly Billing Trend (₹ Lacs) — All Business</div>
@@ -431,34 +339,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
-function toggleSumFocus(biz){
-  const card=document.getElementById('stc-'+biz);
+function sumFocus(biz){
   const row=document.getElementById('sum-trend-row');
-  const isFocused=card.classList.contains('focused');
-  // Remove focused from all cards
-  document.querySelectorAll('.sum-trend-card').forEach(c=>{
-    c.classList.remove('focused');
-    const btn=c.querySelector('button');
-    if(btn) btn.textContent='⛶ Focus';
-  });
+  const card=document.getElementById('stc-'+biz);
+  const already=card&&card.classList.contains('focused');
+  document.querySelectorAll('.sum-trend-card').forEach(c=>{c.classList.remove('focused');const b=c.querySelector('button');if(b)b.textContent='⛶ Focus';});
   row.classList.remove('has-focus');
-  if(!isFocused){
+  if(!already&&card){
     card.classList.add('focused');
     row.classList.add('has-focus');
-    const btn=card.querySelector('button');
-    if(btn) btn.textContent='✕ Exit Focus';
+    const btn=document.getElementById('sfb-'+biz);
+    if(btn)btn.textContent='✕ Exit';
   }
-  // Redraw charts after layout change
-  setTimeout(()=>{
-    BIZ_LIST.forEach(b=>{if(sumCharts[b]){try{sumCharts[b].resize()}catch(e){}}});
-  },150);
+  setTimeout(()=>{BIZ_LIST.forEach(b=>{if(sumCharts[b])try{sumCharts[b].resize()}catch(e){}});},150);
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 // ── STATE ──────────────────────────────────────────────────────
 let RAW=[], ACTIVE_FY='', ALL_FYS=[];
-let CURRENT_BIZ='HW', CURRENT_PAGE='detail';
+let CURRENT_BIZ='ALL', CURRENT_PAGE='detail';
 let DRILL_OPEN=false;
 const CHARTS={};
 const ACT_SBU=new Set();
@@ -525,12 +425,13 @@ function initDashboard(rows,updatedAt){
   RAW=rows;
   ALL_FYS=[...new Set(rows.map(r=>r['FY']||'').filter(Boolean))].sort();
   ACTIVE_FY=ALL_FYS[ALL_FYS.length-1];
-  CURRENT_BIZ='ALL'; // set BEFORE initFilters so subgroup/customer load all values
+  CURRENT_BIZ='ALL';
   initFilters();buildFYTabs();
   document.getElementById('upload-screen').style.display='none';
   document.getElementById('dash').style.display='block';
   const pill=document.getElementById('last-updated-pill');
   if(pill&&updatedAt){pill.textContent='Updated: '+updatedAt;pill.style.display='inline'}
+  CURRENT_BIZ='ALL';
   setPage('detail');
 }
 function resetApp(){
@@ -573,8 +474,8 @@ function initFilters(keepApplied){
   const mSet=new Set(fyRows.map(r=>r['Months']||'').filter(Boolean));
   FS.month.all=MONTH_ORDER.filter(m=>mSet.has(m));
   FS.state.all=[...new Set(fyRows.map(r=>r['Customer State']||'').filter(Boolean))].sort();
-  // subgroup & customer: ALL mode = all businesses, otherwise current biz
-  const bizRows=CURRENT_BIZ==='ALL'?fyRows:fyRows.filter(r=>r['Business']===CURRENT_BIZ);
+  // subgroup: filtered by current biz
+  const bizRows=fyRows.filter(r=>r['Business']===CURRENT_BIZ);
   FS.subgroup.all=[...new Set(bizRows.map(r=>r['Sub- Group']||'').filter(Boolean))].sort();
   FS.customer.all=[...new Set(bizRows.map(r=>r['Customer Name']||'').filter(Boolean))].sort();
   if(!keepApplied){
@@ -592,8 +493,7 @@ function getFilteredRows(biz){
     :RAW.filter(r=>r['FY']===ACTIVE_FY&&r['Business']===biz);
   if(FS.month.act.length<FS.month.all.length) rows=rows.filter(r=>FS.month.act.includes(r['Months']||''));
   if(FS.state.act.length<FS.state.all.length) rows=rows.filter(r=>FS.state.act.includes(r['Customer State']||''));
-  // Apply subgroup/customer/SBU filters when viewing that biz OR in ALL mode
-  if(biz===CURRENT_BIZ||CURRENT_BIZ==='ALL'){
+  if(biz===CURRENT_BIZ){
     if(FS.subgroup.act.length<FS.subgroup.all.length) rows=rows.filter(r=>FS.subgroup.act.includes(r['Sub- Group']||''));
     if(FS.customer.act.length<FS.customer.all.length) rows=rows.filter(r=>FS.customer.act.includes(r['Customer Name']||''));
     if(ACT_SBU.size>0) rows=rows.filter(r=>ACT_SBU.has(r['SBU']||''));
@@ -626,7 +526,7 @@ function analyseFor(biz){
     :RAW.filter(r=>r['FY']===ACTIVE_FY&&r['Business']===biz);
   if(FS.month.act.length<FS.month.all.length) allBizRows=allBizRows.filter(r=>FS.month.act.includes(r['Months']||''));
   if(FS.state.act.length<FS.state.all.length) allBizRows=allBizRows.filter(r=>FS.state.act.includes(r['Customer State']||''));
-  if(biz===CURRENT_BIZ||CURRENT_BIZ==='ALL'){
+  if(biz===CURRENT_BIZ){
     if(FS.subgroup.act.length<FS.subgroup.all.length) allBizRows=allBizRows.filter(r=>FS.subgroup.act.includes(r['Sub- Group']||''));
     if(FS.customer.act.length<FS.customer.all.length) allBizRows=allBizRows.filter(r=>FS.customer.act.includes(r['Customer Name']||''));
   }
@@ -661,184 +561,96 @@ function renderDetail(){
   document.getElementById('fy-badge').textContent=ACTIVE_FY;
   renderOverviewAndTrend();
   renderVTabs();
+  renderOverviewAndTrend();
   renderContent();
   updateClearAllBtn();
 }
 
 function renderOverviewAndTrend(){
-  // MTD month
   const allFYRows=RAW.filter(r=>r['FY']===ACTIVE_FY);
   const mtdM=getMTD(allFYRows);
   document.getElementById('mtd-badge').textContent='MTD: '+(mtdM||'—');
-
-  // ── Donut chart — DD count per business (respects all filters) ──
-    // Donut: YTD Active dealers per biz (MTD Active if month filter applied)
-  // Check if month filter is active — if yes use MTD active, else YTD active
-  const monthFiltered=FS.month.act.length<FS.month.all.length;
-  const donutMetric=monthFiltered?'mtdActive':'ytdActive';
-  const donutMetricLabel=monthFiltered?'MTD Active':'YTD Active';
-  const donutAllData=BIZ_LIST.map(b=>{const d=analyseFor(b);return d[donutMetric]||0;});
-  const donutColorsBase=['#EA580C','#059669','#7C3AED'];
+  // Donut — YTD Active (MTD if month filter active)
+  const mf=FS.month.act.length<FS.month.all.length;
+  const metric=mf?'mtdActive':'ytdActive';
+  const donutData=BIZ_LIST.map(b=>analyseFor(b)[metric]||0);
+  const donutColors=['#EA580C','#059669','#7C3AED'];
   const donutLabels=['HW','ERG','ST'];
-  const donutTotal=donutAllData.reduce((s,v)=>s+v,0);
-
-  // Inactive slices: heavier blur (15% opacity) when a biz is selected
-  const donutColors=donutLabels.map((lbl,i)=>{
-    if(CURRENT_BIZ==='ALL') return donutColorsBase[i];
-    return lbl===CURRENT_BIZ ? donutColorsBase[i] : donutColorsBase[i]+'26'; // ~15% opacity
-  });
-
+  const donutTotal=donutData.reduce((s,v)=>s+v,0);
+  const activeIdx=CURRENT_BIZ==='ALL'?-1:donutLabels.indexOf(CURRENT_BIZ);
+  const bgColors=donutLabels.map((l,i)=>CURRENT_BIZ==='ALL'?donutColors[i]:l===CURRENT_BIZ?donutColors[i]:donutColors[i]+'28');
+  const titleEl=document.getElementById('donut-title-lbl');
+  if(titleEl)titleEl.innerHTML='<i class="ti ti-chart-pie" style="font-size:12px;vertical-align:-1px"></i> '+(mf?'MTD':'YTD')+' Active by Business';
   if(CHARTS['donut']){CHARTS['donut'].destroy();delete CHARTS['donut']}
   setTimeout(()=>{
     const canvas=document.getElementById('donut-chart');
     if(!canvas)return;
     CHARTS['donut']=new Chart(canvas,{
       type:'doughnut',
-      data:{
-        labels:donutLabels,
-        datasets:[{
-          data:donutAllData,
-          backgroundColor:donutColors,
-          borderColor:'#fff',
-          borderWidth:3,
-          hoverOffset:8
-        }]
+      data:{labels:donutLabels,datasets:[{data:donutData,backgroundColor:bgColors,borderColor:'#fff',borderWidth:3,hoverOffset:8}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>v.label+': '+fmtInt(v.raw)+' Active ('+Math.round(v.raw/Math.max(donutTotal,1)*100)+'%)'}}},
+        onClick:(evt,els)=>{if(!els||!els.length)return;const b=donutLabels[els[0].index];switchBiz(CURRENT_BIZ===b?'ALL':b);}
       },
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        cutout:'62%',
-        plugins:{
-          legend:{display:false},
-          tooltip:{callbacks:{
-            label:v=>v.label+': '+fmtInt(v.raw)+' Active ('+Math.round(v.raw/Math.max(donutTotal,1)*100)+'%)'
-          }}
-        },
-        onClick:(evt,els)=>{
-          if(!els||!els.length)return;
-          const idx=els[0].index;
-          const biz=donutLabels[idx];
-          // Toggle biz selection via donut click
-          if(CURRENT_BIZ===biz){
-            switchBiz('ALL'); // click same slice again = go back to ALL
-          } else {
-            switchBiz(biz);
-          }
-          // Re-highlight vtabs
-          document.querySelectorAll('.vtab').forEach(t=>{
-            t.classList.remove('active');
-            if(t.querySelector('.vtab-name')&&t.querySelector('.vtab-name').textContent===CURRENT_BIZ) t.classList.add('active');
-            if(CURRENT_BIZ==='ALL'&&t.querySelector('.vtab-name')&&t.querySelector('.vtab-name').textContent==='ALL') t.classList.add('active');
-          });
-        }
-      },
-      plugins:[{
-        id:'donutCenter',
-        afterDraw(chart){
-          const {ctx,chartArea:{top,bottom,left,right}}=chart;
-          const cx=(left+right)/2,cy=(top+bottom)/2;
-          ctx.save();
-          const activeIdx=CURRENT_BIZ==='ALL'?-1:donutLabels.indexOf(CURRENT_BIZ);
-          const centerVal=activeIdx>=0?donutAllData[activeIdx]:donutTotal;
-          const centerLbl=activeIdx>=0?CURRENT_BIZ+' '+donutMetricLabel:donutMetricLabel;
-          ctx.font='800 20px -apple-system,sans-serif';
-          ctx.fillStyle='#111827';
-          ctx.textAlign='center';
-          ctx.textBaseline='middle';
-          ctx.fillText(fmtInt(centerVal),cx,cy-9);
-          ctx.font='500 10px -apple-system,sans-serif';
-          ctx.fillStyle='#9CA3AF';
-          ctx.fillText(centerLbl,cx,cy+9);
-          ctx.restore();
-        }
-      },{
-        id:'donutSliceLabels',
-        afterDatasetsDraw(chart){
-          const ctx=chart.ctx;
-          const meta=chart.getDatasetMeta(0);
-          ctx.save();
-          meta.data.forEach((arc,i)=>{
-            const val=donutAllData[i];
-            if(!val)return;
-            const pct=Math.round(val/Math.max(donutTotal,1)*100);
-            if(pct<5)return;
-            const isActive=CURRENT_BIZ==='ALL'||donutLabels[i]===CURRENT_BIZ;
-            const angle=(arc.startAngle+arc.endAngle)/2;
-            const midR=arc.innerRadius+(arc.outerRadius-arc.innerRadius)*0.5;
-            const midX=arc.x+Math.cos(angle)*midR;
-            const midY=arc.y+Math.sin(angle)*midR;
-            ctx.globalAlpha=isActive?1:0.18; // heavily faded
-            ctx.font='700 10px -apple-system,sans-serif';
-            ctx.fillStyle='#fff';
-            ctx.textAlign='center';
-            ctx.textBaseline='middle';
-            ctx.fillText(donutLabels[i],midX,midY-6);
-            ctx.font='600 9px -apple-system,sans-serif';
-            ctx.fillText(fmtInt(val),midX,midY+6);
-            ctx.globalAlpha=1;
-          });
-          ctx.restore();
-        }
-      }]
+      plugins:[{id:'dc',afterDraw(chart){
+        const{ctx,chartArea:{top,bottom,left,right}}=chart;const cx=(left+right)/2,cy=(top+bottom)/2;
+        ctx.save();
+        const cv=activeIdx>=0?donutData[activeIdx]:donutTotal;
+        const cl=activeIdx>=0?CURRENT_BIZ+' '+(mf?'MTD':'YTD'):mf?'MTD Active':'YTD Active';
+        ctx.font='800 20px -apple-system,sans-serif';ctx.fillStyle='#111827';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(fmtInt(cv),cx,cy-8);
+        ctx.font='500 10px -apple-system,sans-serif';ctx.fillStyle='#9CA3AF';ctx.fillText(cl,cx,cy+10);ctx.restore();
+      }},{id:'dsl',afterDatasetsDraw(chart){
+        const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);ctx.save();
+        meta.data.forEach((arc,i)=>{
+          const val=donutData[i];if(!val)return;
+          const pct=Math.round(val/Math.max(donutTotal,1)*100);if(pct<6)return;
+          const isAct=CURRENT_BIZ==='ALL'||donutLabels[i]===CURRENT_BIZ;
+          const angle=(arc.startAngle+arc.endAngle)/2;const midR=arc.innerRadius+(arc.outerRadius-arc.innerRadius)*0.5;
+          const mx=arc.x+Math.cos(angle)*midR,my=arc.y+Math.sin(angle)*midR;
+          ctx.globalAlpha=isAct?1:0.2;
+          ctx.font='700 10px -apple-system,sans-serif';ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillText(donutLabels[i],mx,my-6);
+          ctx.font='600 9px -apple-system,sans-serif';ctx.fillText(fmtInt(val),mx,my+6);
+          ctx.globalAlpha=1;
+        });ctx.restore();
+      }}]
     });
-  },50);  // ── Combined trend chart ────────────────────────────────────────
+  },50);
+  // Trend
   if(CHARTS['trend-all']){CHARTS['trend-all'].destroy();delete CHARTS['trend-all']}
   setTimeout(()=>{
-    const canvas=document.getElementById('trend-all');
-    if(!canvas)return;
-    // Months in this FY that match active month filter
-    const fyRows2=RAW.filter(r=>r['FY']===ACTIVE_FY);
-    const mSet=new Set(fyRows2.map(r=>r['Months']||'').filter(Boolean));
-    const chartMonths=MONTH_ORDER.filter(m=>mSet.has(m)&&(FS.month.act.length>=FS.month.all.length||FS.month.act.includes(m)));
-    // Datasets: ALL shows 3 lines, specific biz shows 1 line
-    const activeBizList=CURRENT_BIZ==='ALL'?BIZ_LIST:[CURRENT_BIZ];
-    const datasets=activeBizList.map(b=>{
-      const cfg=BIZ_CFG[b];
-      const rows=getFilteredRows(b);
-      const data=chartMonths.map(m=>parseFloat(rows.filter(r=>r['Months']===m).reduce((s,r)=>s+(parseFloat(r['BV'])||0),0).toFixed(2)));
-      return{label:b,data,borderColor:cfg.line,backgroundColor:cfg.line+'15',fill:true,tension:0.42,pointRadius:5,pointBackgroundColor:cfg.line,pointBorderColor:'#fff',pointBorderWidth:2.5,borderWidth:3};
+    const canvas=document.getElementById('trend-all');if(!canvas)return;
+    const mSet=new Set(allFYRows.map(r=>r['Months']||'').filter(Boolean));
+    const cMonths=MONTH_ORDER.filter(m=>mSet.has(m)&&(FS.month.act.length>=FS.month.all.length||FS.month.act.includes(m)));
+    const al=CURRENT_BIZ==='ALL';
+    const dsList=(al?BIZ_LIST:[CURRENT_BIZ]).map(b=>{
+      const cfg=BIZ_CFG[b];const rows=getFilteredRows(b);
+      return{label:b,data:cMonths.map(m=>parseFloat(rows.filter(r=>r['Months']===m).reduce((s,r)=>s+(parseFloat(r['BV'])||0),0).toFixed(2))),borderColor:cfg.line,backgroundColor:cfg.line+'18',fill:true,tension:0.42,pointRadius:5,pointBackgroundColor:cfg.line,pointBorderColor:'#fff',pointBorderWidth:2.5,borderWidth:3};
     });
-    const isAll=CURRENT_BIZ==='ALL';
     CHARTS['trend-all']=new Chart(canvas,{
       type:'line',
-      data:{labels:chartMonths.map(m=>m.slice(0,3)),datasets},
-      options:{
-        responsive:true,maintainAspectRatio:false,
-        plugins:{
-          legend:{display:isAll,position:'top',labels:{font:{size:11},padding:10,usePointStyle:true,pointStyleWidth:8}},
-          tooltip:{callbacks:{label:v=>v.dataset.label+': ₹'+fmt(v.raw)+' L'}}
-        },
-        scales:{
-          x:{ticks:{font:{size:11},autoSkip:false},grid:{display:false},border:{display:false}},
-          y:{display:false,grid:{display:false},border:{display:false}}
-        },
-        layout:{padding:{top:isAll?8:36,bottom:4,left:6,right:6}}
+      data:{labels:cMonths.map(m=>m.slice(0,3)),datasets:dsList},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:al,position:'top',labels:{font:{size:11},padding:10,usePointStyle:true}},tooltip:{callbacks:{label:v=>v.dataset.label+': ₹'+fmt(v.raw)+' L'}}},
+        scales:{x:{ticks:{font:{size:11},autoSkip:false},grid:{display:false},border:{display:false}},y:{display:false,grid:{display:false},border:{display:false}}},
+        layout:{padding:{top:al?8:34,bottom:4,left:6,right:6}}
       },
-      plugins:[{
-        id:'trendDL',
-        afterDatasetsDraw(chart){
-          const ctx=chart.ctx;
-          chart.data.datasets.forEach((ds,di)=>{
-            const meta=chart.getDatasetMeta(di);
-            if(meta.hidden)return;
-            const vOff=isAll?[0,14,28][di]||0:0; // stagger 3 lines vertically in ALL mode
-            ctx.save();
-            meta.data.forEach((pt,i)=>{
-              const val=ds.data[i];
-              if(!val||val===0)return;
-              ctx.font=isAll?'600 9px -apple-system,sans-serif':'700 10px -apple-system,sans-serif';
-              ctx.fillStyle=ds.borderColor;
-              ctx.textAlign='center';
-              ctx.textBaseline='bottom';
-              ctx.fillText('₹'+(isAll?val.toFixed(1):fmt(val)),pt.x,pt.y-6-vOff);
-            });
-            ctx.restore();
-          });
-        }
-      }]
+      plugins:[{id:'tdl',afterDatasetsDraw(chart){
+        const ctx=chart.ctx;
+        chart.data.datasets.forEach((ds,di)=>{
+          const meta=chart.getDatasetMeta(di);if(meta.hidden)return;
+          const vOff=al?[0,14,28][di]||0:0;
+          ctx.save();meta.data.forEach((pt,i)=>{
+            const val=ds.data[i];if(!val||val===0)return;
+            ctx.font=al?'600 9px -apple-system,sans-serif':'700 10px -apple-system,sans-serif';
+            ctx.fillStyle=ds.borderColor;ctx.textAlign='center';ctx.textBaseline='bottom';
+            ctx.fillText('₹'+(al?val.toFixed(1):fmt(val)),pt.x,pt.y-6-vOff);
+          });ctx.restore();
+        });
+      }}]
     });
   },80);
-}
+
 
 function renderVTabs(){
   const vtabsEl=document.getElementById('vtabs');
@@ -863,7 +675,7 @@ function switchBiz(biz){
   CURRENT_BIZ=biz;
   DRILL_OPEN=false;
   ACT_SBU.clear();renderSBUPills();
-  // refresh subgroup/customer — ALL = all businesses, otherwise scope to biz
+  // refresh subgroup/customer options
   const fyBizRows=biz==='ALL'
     ?RAW.filter(r=>r['FY']===ACTIVE_FY)
     :RAW.filter(r=>r['FY']===ACTIVE_FY&&r['Business']===biz);
@@ -874,7 +686,7 @@ function switchBiz(biz){
   buildDD_list('subgroup');updateDDBadge('subgroup');
   buildDD_list('customer');updateDDBadge('customer');
   renderVTabs();
-  renderOverviewAndTrend(); // refresh donut + trend for new biz
+  renderOverviewAndTrend();
   renderContent();
   updateClearAllBtn();
 }
@@ -886,10 +698,9 @@ function renderContent(){
   const panel=document.getElementById('content-panel');
 
   panel.innerHTML=`
-    <!-- Applied filter chips -->
+    <!-- Applied filter chips — filled by JS after render -->
     <div id="filter-chips-row" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.75rem"></div>
-
-    <!-- SBU Breakdown — moved to top -->
+    <!-- SBU Breakdown at top -->
     <div class="sbu-sec-title"><i class="ti ti-layout-grid" style="font-size:13px"></i> SBU Breakdown <span style="font-size:10px;font-weight:400;color:#D1D5DB">— click to filter · multi-select</span></div>
     <div class="cat-grid${ACT_SBU.size>0?' has-sel':''}" id="sbu-grid"></div>
 
@@ -905,36 +716,35 @@ function renderContent(){
       <div class="drill-section">
         <div class="drill-table-title" style="font-size:11px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:.8rem;display:flex;align-items:center;gap:6px">
           <i class="ti ti-map-pin" style="font-size:13px;color:${cfg.acc}"></i>
-          ${CURRENT_BIZ==='ALL'?'All Businesses — HW / ERG / ST State Drill-Down':CURRENT_BIZ+' — Customer State Level Detail'}
+          ${CURRENT_BIZ==='ALL'?'All Businesses — HW / ERG / ST':'${CURRENT_BIZ}'} — State Drill-Down
         </div>
-        <div style="overflow-x:auto" id="drill-table-wrap"></div>
+        <div id="drill-table-wrap" style="overflow-x:auto"></div>
       </div>
     </div>
 
     <!-- State vertical bar chart -->
     <div class="state-section">
       <div class="state-title"><i class="ti ti-map" style="font-size:13px;color:${cfg.acc}"></i> Sale by State (₹ Lacs)</div>
-      <div id="state-vchart-wrap" style="position:relative;height:320px;width:100%">
+      <div style="position:relative;height:320px;width:100%">
         <canvas id="state-vchart" role="img" aria-label="Sale by state vertical bar chart"></canvas>
       </div>
     </div>`;
 
   // Render applied filter chips
   renderFilterChips();
-
+  renderSBUCards(d,cfg);
+  if(DRILL_OPEN) requestAnimationFrame(()=>renderDrillTable());
   // Render SBU cards
   renderSBUCards(d,cfg);
-
-  // Render drill table if open
-  if(DRILL_OPEN) requestAnimationFrame(()=>requestAnimationFrame(()=>renderDrillTable()));
+  // Render drill table if open — use rAF to ensure DOM is ready
+  if(DRILL_OPEN) requestAnimationFrame(()=>renderDrillTable());
 
   // Render state vertical bar chart
   setTimeout(()=>{
     const k='state-v';
     if(CHARTS[k]){CHARTS[k].destroy();delete CHARTS[k]}
     const canvas=document.getElementById('state-vchart');
-    if(!canvas){console.warn('state-vchart canvas not found');return;}
-    if(!d.states||!d.states.length)return;
+    if(!canvas||!d.states.length)return;
     CHARTS[k]=new Chart(canvas,{
       type:'bar',
       data:{
@@ -987,122 +797,101 @@ function renderContent(){
 
 function renderDrillTable(){
   const wrap=document.getElementById('drill-table-wrap');
-  if(!wrap)return;
+  if(!wrap){return;}
   if(CURRENT_BIZ==='ALL'){
-    // ALL mode: grouped by HW/ERG/ST with collapse/expand
-    wrap.innerHTML=BIZ_LIST.map(biz=>buildBizDrillGroup(biz)).join('');
+    wrap.innerHTML=BIZ_LIST.map(biz=>buildBizGroup(biz)).join('');
   } else {
-    // Single biz: subtotal row + state rows
-    wrap.innerHTML=buildSingleBizDrillTable(CURRENT_BIZ);
+    wrap.innerHTML=buildSingleTable(CURRENT_BIZ);
   }
 }
 
-function getStateDrillData(biz){
+function getStateData(biz){
   const rows=getFilteredRows(biz);
   const mtdM=getMTD(rows);
   const mtdRows=rows.filter(r=>r['Months']===mtdM);
   const allBase=biz==='ALL'?RAW:RAW.filter(r=>r['Business']===biz);
-  const allStateDD={};
-  allBase.forEach(r=>{const st=r['Customer State']||'Other';if(!allStateDD[st])allStateDD[st]=new Set();if(r['Customer Code'])allStateDD[st].add(r['Customer Code'])});
-  const stateMap={};
-  rows.forEach(r=>{
-    const st=r['Customer State']||'Other';
-    if(!stateMap[st])stateMap[st]={ytdBV:0,mtdBV:0,ytdD:new Set(),mtdD:new Set()};
-    stateMap[st].ytdBV+=parseFloat(r['BV'])||0;
-    if(r['Customer Code'])stateMap[st].ytdD.add(r['Customer Code']);
-  });
-  mtdRows.forEach(r=>{
-    const st=r['Customer State']||'Other';
-    if(!stateMap[st])stateMap[st]={ytdBV:0,mtdBV:0,ytdD:new Set(),mtdD:new Set()};
-    stateMap[st].mtdBV+=parseFloat(r['BV'])||0;
-    if(r['Customer Code'])stateMap[st].mtdD.add(r['Customer Code']);
-  });
-  return Object.entries(stateMap).map(([st,v])=>{
-    const totalDD=(allStateDD[st]||new Set()).size;
-    const ytdA=v.ytdD.size,mtdA=v.mtdD.size;
-    return{st,totalDD,ytdA,mtdA,ytdBV:v.ytdBV,mtdBV:v.mtdBV,pct:totalDD>0?Math.round(ytdA/totalDD*100):0};
+  const allSDD={};
+  allBase.forEach(r=>{const s=r['Customer State']||'Other';if(!allSDD[s])allSDD[s]=new Set();if(r['Customer Code'])allSDD[s].add(r['Customer Code'])});
+  const sMap={};
+  rows.forEach(r=>{const s=r['Customer State']||'Other';if(!sMap[s])sMap[s]={ytdBV:0,mtdBV:0,ytdD:new Set(),mtdD:new Set()};sMap[s].ytdBV+=parseFloat(r['BV'])||0;if(r['Customer Code'])sMap[s].ytdD.add(r['Customer Code'])});
+  mtdRows.forEach(r=>{const s=r['Customer State']||'Other';if(!sMap[s])sMap[s]={ytdBV:0,mtdBV:0,ytdD:new Set(),mtdD:new Set()};sMap[s].mtdBV+=parseFloat(r['BV'])||0;if(r['Customer Code'])sMap[s].mtdD.add(r['Customer Code'])});
+  return Object.entries(sMap).map(([s,v])=>{
+    const tdd=(allSDD[s]||new Set()).size;
+    return{st:s,tdd,ytdA:v.ytdD.size,mtdA:v.mtdD.size,ytdBV:v.ytdBV,mtdBV:v.mtdBV,pct:tdd>0?Math.round(v.ytdD.size/tdd*100):0};
   }).sort((a,b)=>b.ytdBV-a.ytdBV);
 }
 
-const TH_STYLE='padding:7px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6B7280;font-weight:700;border-bottom:1px solid #E5E7EB;';
-function TH_ROW(){return '<tr style="background:#F9FAFB">'
-  +'<th style="'+TH_STYLE+'text-align:left;white-space:nowrap">State</th>'
-  +'<th style="'+TH_STYLE+'text-align:right">Total DD</th>'
-  +'<th style="'+TH_STYLE+'text-align:right">YTD Active</th>'
-  +'<th style="'+TH_STYLE+'text-align:right">MTD Active</th>'
-  +'<th style="'+TH_STYLE+'text-align:right">YTD Billed</th>'
-  +'<th style="'+TH_STYLE+'text-align:right">MTD Billed</th>'
-  +'<th style="'+TH_STYLE+'text-align:right">Active %</th>'
-  +'</tr>';}
-
-function stateRow(r,acc){
-  return`<tr class="drill-row" style="border-bottom:1px solid #F9FAFB" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background=''">
-    <td style="padding:7px 10px;font-weight:600;color:#111827;font-size:12px">${r.st}</td>
-    <td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:600">${fmtInt(r.totalDD)}</td>
-    <td style="padding:7px 10px;text-align:right;font-size:12px;color:${acc};font-weight:700">${fmtInt(r.ytdA)}</td>
-    <td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:600">${fmtInt(r.mtdA)}</td>
-    <td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:600">₹${fmt(r.ytdBV)}</td>
-    <td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:600">₹${fmt(r.mtdBV)}</td>
-    <td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:700;color:${r.pct>=50?'#059669':'#374151'}">${r.pct}%</td>
-  </tr>`;
+function thRow(){
+  const s='padding:7px 10px;font-size:10px;color:#6B7280;font-weight:700;border-bottom:1px solid #E5E7EB;text-transform:uppercase;letter-spacing:.4px;';
+  return '<tr style="background:#F9FAFB">'
+    +'<th style="'+s+'text-align:left">State</th>'
+    +'<th style="'+s+'text-align:right">Total DD</th>'
+    +'<th style="'+s+'text-align:right">YTD Active</th>'
+    +'<th style="'+s+'text-align:right">MTD Active</th>'
+    +'<th style="'+s+'text-align:right">YTD Billed</th>'
+    +'<th style="'+s+'text-align:right">MTD Billed</th>'
+    +'<th style="'+s+'text-align:right">Active%</th>'
+    +'</tr>';
 }
 
-function subtotalRow(rows, acc, label='Subtotal'){
-  const tot={totalDD:0,ytdA:0,mtdA:0,ytdBV:0,mtdBV:0};
-  rows.forEach(r=>{tot.totalDD+=r.totalDD;tot.ytdA+=r.ytdA;tot.mtdA+=r.mtdA;tot.ytdBV+=r.ytdBV;tot.mtdBV+=r.mtdBV});
-  const pct=tot.totalDD>0?Math.round(tot.ytdA/tot.totalDD*100):0;
-  return`<tr style="background:#F0FDF4;border-bottom:2px solid #D1FAE5;border-top:1px solid #D1FAE5">
-    <td style="padding:7px 10px;font-weight:800;color:#065F46;font-size:12px">📊 ${label}</td>
-    <td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:800;color:#065F46">${fmtInt(tot.totalDD)}</td>
-    <td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:800;color:${acc}">${fmtInt(tot.ytdA)}</td>
-    <td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:800;color:#065F46">${fmtInt(tot.mtdA)}</td>
-    <td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:800;color:#065F46">₹${fmt(tot.ytdBV)}</td>
-    <td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:800;color:#065F46">₹${fmt(tot.mtdBV)}</td>
-    <td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:800;color:#065F46">${pct}%</td>
-  </tr>`;
+function dataRow(r,acc){
+  const td='padding:7px 10px;font-size:12px;border-bottom:1px solid #F9FAFB;';
+  return '<tr onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background=''">'
+    +'<td style="'+td+'font-weight:600;color:#111827">'+r.st+'</td>'
+    +'<td style="'+td+'text-align:right">'+fmtInt(r.tdd)+'</td>'
+    +'<td style="'+td+'text-align:right;color:'+acc+';font-weight:700">'+fmtInt(r.ytdA)+'</td>'
+    +'<td style="'+td+'text-align:right">'+fmtInt(r.mtdA)+'</td>'
+    +'<td style="'+td+'text-align:right">₹'+fmt(r.ytdBV)+'</td>'
+    +'<td style="'+td+'text-align:right">₹'+fmt(r.mtdBV)+'</td>'
+    +'<td style="'+td+'text-align:right;font-weight:700;color:'+(r.pct>=50?'#059669':'#374151')+'">'+r.pct+'%</td>'
+    +'</tr>';
 }
 
-function buildSingleBizDrillTable(biz){
+function subRow(data,acc,lbl){
+  const tot=data.reduce((s,r)=>({tdd:s.tdd+r.tdd,ytdA:s.ytdA+r.ytdA,mtdA:s.mtdA+r.mtdA,ytdBV:s.ytdBV+r.ytdBV,mtdBV:s.mtdBV+r.mtdBV}),{tdd:0,ytdA:0,mtdA:0,ytdBV:0,mtdBV:0});
+  const pct=tot.tdd>0?Math.round(tot.ytdA/tot.tdd*100):0;
+  const td='padding:8px 10px;font-size:12px;font-weight:800;color:#065F46;';
+  return '<tr style="background:#ECFDF5;border-top:2px solid #6EE7B7;border-bottom:2px solid #6EE7B7">'
+    +'<td style="'+td+'">📊 '+lbl+'</td>'
+    +'<td style="'+td+'text-align:right">'+fmtInt(tot.tdd)+'</td>'
+    +'<td style="'+td+'text-align:right;color:'+acc+'">'+fmtInt(tot.ytdA)+'</td>'
+    +'<td style="'+td+'text-align:right">'+fmtInt(tot.mtdA)+'</td>'
+    +'<td style="'+td+'text-align:right">₹'+fmt(tot.ytdBV)+'</td>'
+    +'<td style="'+td+'text-align:right">₹'+fmt(tot.mtdBV)+'</td>'
+    +'<td style="'+td+'text-align:right">'+pct+'%</td>'
+    +'</tr>';
+}
+
+function buildSingleTable(biz){
   const cfg=BIZ_CFG[biz]||{acc:'#374151'};
-  const data=getStateDrillData(biz);
-  const rows=data.map(r=>stateRow(r,cfg.acc)).join('');
-  const sub=subtotalRow(data,cfg.acc,biz+' Total');
-  return`<table style="width:100%;border-collapse:collapse;font-size:12px">
-    <thead>${TH_ROW()}${sub}</thead>
-    <tbody>${rows}</tbody>
-  </table>`;
+  const data=getStateData(biz);
+  return '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+    +'<thead>'+thRow()+subRow(data,cfg.acc,biz+' Total')+'</thead>'
+    +'<tbody>'+data.map(r=>dataRow(r,cfg.acc)).join('')+'</tbody>'
+    +'</table></div>';
 }
 
-function buildBizDrillGroup(biz){
+function buildBizGroup(biz){
   const cfg=BIZ_CFG[biz]||{acc:'#374151'};
-  const data=getStateDrillData(biz);
-  const grpId='drill-grp-'+biz;
-  const sub=subtotalRow(data,cfg.acc,biz+' Subtotal');
-  const rows=data.map(r=>stateRow(r,cfg.acc)).join('');
-  return`<div style="margin-bottom:10px;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:${cfg.acc}18;cursor:pointer;user-select:none" onclick="toggleDrillGroup('${grpId}')">
-      <span style="font-size:13px;font-weight:700;color:${cfg.acc};display:flex;align-items:center;gap:8px">
-        <span style="width:10px;height:10px;border-radius:50%;background:${cfg.acc};display:inline-block"></span>
-        ${biz} — State Breakdown
-      </span>
-      <span id="${grpId}-icon" style="font-size:13px;color:${cfg.acc}">▼</span>
-    </div>
-    <div id="${grpId}" style="display:block;overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>${TH_ROW()}${sub}</thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-  </div>`;
+  const data=getStateData(biz);
+  const id='dg-'+biz;
+  const header='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:'+cfg.acc+'18;cursor:pointer;border-radius:10px 10px 0 0" onclick="toggleGrp(''+id+'')">'
+    +'<span style="font-size:13px;font-weight:700;color:'+cfg.acc+'"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+cfg.acc+';margin-right:8px"></span>'+biz+' — State Breakdown</span>'
+    +'<span id="'+id+'-ic" style="color:'+cfg.acc+';font-weight:700">▼</span></div>';
+  const table='<div id="'+id+'" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+    +'<thead>'+thRow()+subRow(data,cfg.acc,biz+' Subtotal')+'</thead>'
+    +'<tbody>'+data.map(r=>dataRow(r,cfg.acc)).join('')+'</tbody>'
+    +'</table></div>';
+  return '<div style="margin-bottom:10px;border:1px solid #E5E7EB;border-radius:10px;overflow:hidden">'+header+table+'</div>';
 }
 
-function toggleDrillGroup(id){
+function toggleGrp(id){
   const el=document.getElementById(id);
-  const icon=document.getElementById(id+'-icon');
+  const ic=document.getElementById(id+'-ic');
   if(!el)return;
   const open=el.style.display!=='none';
   el.style.display=open?'none':'block';
-  if(icon)icon.textContent=open?'▶':'▼';
+  if(ic)ic.textContent=open?'▶':'▼';
 }!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1191,10 +980,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 /* ── TOP SECTION: Overview card + Trend ── */
 .top-section{display:grid;grid-template-columns:260px 1fr;gap:14px;margin-bottom:1rem;align-items:stretch}
-.donut-card{background:#fff;border-radius:20px;padding:1.1rem 1rem;border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 16px rgba(0,0,0,.07);display:flex;flex-direction:column;align-items:center}
-.donut-title{font-size:10px;color:#9CA3AF;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:.6rem;align-self:flex-start}
-.donut-wrap{position:relative;width:100%;flex:1;min-height:200px}
-
+.overview-card{border-radius:20px;padding:1.4rem 1.6rem;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 8px 24px rgba(0,0,0,.13);position:relative;overflow:hidden;background:linear-gradient(135deg,#5B21B6,#7C3AED)}
+.overview-card::before{content:'';position:absolute;top:-30px;right:-30px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.08)}
+.overview-card::after{content:'';position:absolute;bottom:-20px;left:10px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06)}
+.ov-label{font-size:9px;font-weight:700;letter-spacing:1.2px;color:rgba(255,255,255,.5);margin-bottom:.9rem;text-transform:uppercase;position:relative;z-index:1}
+.ov-rows{display:flex;flex-direction:column;gap:0;flex:1;position:relative;z-index:1}
+.ov-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.12)}
+.ov-row:last-child{border-bottom:none}
+.ov-lbl{font-size:11px;color:rgba(255,255,255,.65);font-weight:500}
+.ov-val{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px}
 .trend-card{background:#fff;border-radius:20px;padding:1.2rem 1.4rem;border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 16px rgba(0,0,0,.06);display:flex;flex-direction:column}
 .trend-title{font-size:10px;color:#9CA3AF;margin-bottom:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
 .trend-wrap{position:relative;flex:1;min-height:130px}
@@ -1208,7 +1002,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .vtab::before{content:'';position:absolute;top:-20px;right:-20px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.1)}
 .vtab-name{font-size:14px;font-weight:800;color:#fff;letter-spacing:.5px;line-height:1}
 .vtab-dd{font-size:10px;color:rgba(255,255,255,.72);font-weight:600;white-space:nowrap}
-.vtab.hw{background:linear-gradient(135deg,#C2410C,#EA580C);box-shadow:0 4px 14px rgba(234,88,12,.3)}
+.vtab.hw{background:linear-gradient(135deg,#1D4ED8,#2563EB);box-shadow:0 4px 14px rgba(29,78,216,.25)}
 .vtab.erg{background:linear-gradient(135deg,#065F46,#059669);box-shadow:0 4px 14px rgba(5,150,105,.25)}
 .vtab.st{background:linear-gradient(135deg,#5B21B6,#7C3AED);box-shadow:0 4px 14px rgba(124,58,237,.25)}
 .vtab:hover{transform:translateY(-2px);opacity:.92}
@@ -1298,103 +1092,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .vtab.all{background:linear-gradient(150deg,#374151,#4B5563);box-shadow:0 4px 14px rgba(55,65,81,.25)}
 .biz-hw{background:#EA580C}.biz-erg{background:#0F6E56}.biz-st{background:#7C3AED}
 .no-data{text-align:center;color:#9CA3AF;font-size:13px;padding:1.5rem;grid-column:1/-1}
-
-/* ══════════════════════════════════════════════
-   MOBILE RESPONSIVE — max-width 768px
-   ══════════════════════════════════════════════ */
-@media (max-width: 768px) {
-  body{padding:.75rem}
-
-  /* Top bar */
-  .top-bar{flex-direction:column;align-items:flex-start;gap:.5rem}
-  .dash-title{font-size:16px}
-  .top-right{gap:6px;flex-wrap:wrap}
-  .icon-btn{padding:6px 10px;font-size:11px}
-
-  /* FY row */
-  .fy-row{flex-wrap:wrap;width:100%}
-  .fy-tab{padding:6px 12px;font-size:11px}
-  .page-tab{padding:6px 10px;font-size:11px}
-
-  /* Filters */
-  .filters-bar{gap:6px}
-  .filter-btn{padding:6px 10px;font-size:11px}
-  .filter-dropdown{width:220px}
-
-  /* Top section: stack donut + trend vertically */
-  .top-section{grid-template-columns:1fr;gap:10px}
-  .donut-card{padding:1rem;min-height:240px}
-  .donut-wrap{min-height:140px}
-  .trend-wrap{min-height:160px}
-
-  /* Biz tabs: wrap, smaller */
-  .vtabs{gap:6px}
-  .vtab{padding:.5rem .9rem;min-width:70px;border-radius:12px}
-  .vtab-name{font-size:12px}
-  .vtab-dd{font-size:9px}
-
-  /* KPI chips: 2 per row on mobile */
-  .kpi-row{grid-template-columns:repeat(2,1fr);gap:7px}
-  .kpi-chip{padding:.7rem .8rem}
-  .kc-val{font-size:14px}
-  .kc-lbl{font-size:8px}
-
-  /* SBU cards: 2 per row on mobile */
-  .cat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  .cat-card{padding:.65rem .75rem}
-  .cc-val{font-size:13px}
-
-  /* Drill down table: scrollable */
-  .drill-section{overflow-x:auto}
-  .drill-table{font-size:11px;min-width:600px}
-  .drill-table th,.drill-table td{padding:6px 8px}
-
-  /* State chart: taller for mobile readability */
-  .state-section{padding:.9rem}
-  #state-vchart-wrap{height:280px!important}
-
-  /* Summary cards: 1 per row */
-  .summary-grid{grid-template-columns:1fr}
-  .sum-trend-row{grid-template-columns:1fr}
-
-  /* FY badge pills: smaller */
-  .pill{font-size:10px;padding:2px 8px;margin-left:4px}
-  .pill-upd{font-size:9px;padding:2px 7px}
-}
-
-@media (max-width: 480px) {
-  body{padding:.5rem}
-  .dash-title{font-size:15px}
-
-  /* Stack pills below title */
-  .top-bar > div:first-child{flex-wrap:wrap;gap:3px}
-
-  /* FY tabs wrap tightly */
-  .fy-row{gap:0;padding:3px}
-  .fy-tab{padding:5px 10px;font-size:10px}
-  .page-tab{padding:5px 8px;font-size:10px}
-  .fy-separator{margin:0 2px}
-
-  /* 1 KPI chip per row on tiny screens */
-  .kpi-row{grid-template-columns:1fr 1fr}
-  .kc-val{font-size:13px}
-
-  /* Vtabs: 2 per row */
-  .vtabs{display:grid;grid-template-columns:repeat(2,1fr)}
-  .vtab-divider{display:none}
-  .vtab{min-width:unset;justify-content:center}
-
-  /* SBU: 1 per row */
-  .cat-grid{grid-template-columns:1fr 1fr}
-
-  /* Overview card rows */
-  .ov-val{font-size:14px}
-  .ov-lbl{font-size:10px}
-
-  /* Drill btn */
-  .drill-btn{font-size:11px;padding:6px 12px}
-}
-
 </style>
 </head>
 <body>
@@ -1497,8 +1194,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="top-section">
       <div class="donut-card">
         <div class="donut-title" id="donut-title-lbl"><i class="ti ti-chart-pie" style="font-size:12px;vertical-align:-1px"></i> YTD Active by Business</div>
-        <div class="donut-wrap"><canvas id="donut-chart" role="img" aria-label="Dealer count donut chart"></canvas></div>
-
+        <div class="donut-wrap"><canvas id="donut-chart" role="img" aria-label="Active DD donut"></canvas></div>
       </div>
       <div class="trend-card">
         <div class="trend-title">Monthly Billing Trend (₹ Lacs) — All Business</div>
@@ -1533,7 +1229,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <script>
 // ── STATE ──────────────────────────────────────────────────────
 let RAW=[], ACTIVE_FY='', ALL_FYS=[];
-let CURRENT_BIZ='HW', CURRENT_PAGE='detail';
+let CURRENT_BIZ='ALL', CURRENT_PAGE='detail';
 let DRILL_OPEN=false;
 const CHARTS={};
 const ACT_SBU=new Set();
@@ -1600,12 +1296,13 @@ function initDashboard(rows,updatedAt){
   RAW=rows;
   ALL_FYS=[...new Set(rows.map(r=>r['FY']||'').filter(Boolean))].sort();
   ACTIVE_FY=ALL_FYS[ALL_FYS.length-1];
-  CURRENT_BIZ='ALL'; // set BEFORE initFilters so subgroup/customer load all values
+  CURRENT_BIZ='ALL';
   initFilters();buildFYTabs();
   document.getElementById('upload-screen').style.display='none';
   document.getElementById('dash').style.display='block';
   const pill=document.getElementById('last-updated-pill');
   if(pill&&updatedAt){pill.textContent='Updated: '+updatedAt;pill.style.display='inline'}
+  CURRENT_BIZ='ALL';
   setPage('detail');
 }
 function resetApp(){
@@ -1648,8 +1345,8 @@ function initFilters(keepApplied){
   const mSet=new Set(fyRows.map(r=>r['Months']||'').filter(Boolean));
   FS.month.all=MONTH_ORDER.filter(m=>mSet.has(m));
   FS.state.all=[...new Set(fyRows.map(r=>r['Customer State']||'').filter(Boolean))].sort();
-  // subgroup & customer: ALL mode = all businesses, otherwise current biz
-  const bizRows=CURRENT_BIZ==='ALL'?fyRows:fyRows.filter(r=>r['Business']===CURRENT_BIZ);
+  // subgroup: filtered by current biz
+  const bizRows=fyRows.filter(r=>r['Business']===CURRENT_BIZ);
   FS.subgroup.all=[...new Set(bizRows.map(r=>r['Sub- Group']||'').filter(Boolean))].sort();
   FS.customer.all=[...new Set(bizRows.map(r=>r['Customer Name']||'').filter(Boolean))].sort();
   if(!keepApplied){
@@ -1667,8 +1364,7 @@ function getFilteredRows(biz){
     :RAW.filter(r=>r['FY']===ACTIVE_FY&&r['Business']===biz);
   if(FS.month.act.length<FS.month.all.length) rows=rows.filter(r=>FS.month.act.includes(r['Months']||''));
   if(FS.state.act.length<FS.state.all.length) rows=rows.filter(r=>FS.state.act.includes(r['Customer State']||''));
-  // Apply subgroup/customer/SBU filters when viewing that biz OR in ALL mode
-  if(biz===CURRENT_BIZ||CURRENT_BIZ==='ALL'){
+  if(biz===CURRENT_BIZ){
     if(FS.subgroup.act.length<FS.subgroup.all.length) rows=rows.filter(r=>FS.subgroup.act.includes(r['Sub- Group']||''));
     if(FS.customer.act.length<FS.customer.all.length) rows=rows.filter(r=>FS.customer.act.includes(r['Customer Name']||''));
     if(ACT_SBU.size>0) rows=rows.filter(r=>ACT_SBU.has(r['SBU']||''));
@@ -1701,7 +1397,7 @@ function analyseFor(biz){
     :RAW.filter(r=>r['FY']===ACTIVE_FY&&r['Business']===biz);
   if(FS.month.act.length<FS.month.all.length) allBizRows=allBizRows.filter(r=>FS.month.act.includes(r['Months']||''));
   if(FS.state.act.length<FS.state.all.length) allBizRows=allBizRows.filter(r=>FS.state.act.includes(r['Customer State']||''));
-  if(biz===CURRENT_BIZ||CURRENT_BIZ==='ALL'){
+  if(biz===CURRENT_BIZ){
     if(FS.subgroup.act.length<FS.subgroup.all.length) allBizRows=allBizRows.filter(r=>FS.subgroup.act.includes(r['Sub- Group']||''));
     if(FS.customer.act.length<FS.customer.all.length) allBizRows=allBizRows.filter(r=>FS.customer.act.includes(r['Customer Name']||''));
   }
@@ -1736,183 +1432,78 @@ function renderDetail(){
   document.getElementById('fy-badge').textContent=ACTIVE_FY;
   renderOverviewAndTrend();
   renderVTabs();
+  renderOverviewAndTrend();
   renderContent();
   updateClearAllBtn();
 }
 
 function renderOverviewAndTrend(){
+  // Combined totals
+  let totalDD=0,totalYtdBV=0,totalMtdBV=0,totalYtdA=0,totalMtdA=0;
+  BIZ_LIST.forEach(b=>{
+    const d=analyseFor(b);
+    totalDD+=d.totalDD; totalYtdBV+=d.ytdBV; totalMtdBV+=d.mtdBV;
+    totalYtdA+=d.ytdActive; totalMtdA+=d.mtdActive;
+  });
   // MTD month
   const allFYRows=RAW.filter(r=>r['FY']===ACTIVE_FY);
   const mtdM=getMTD(allFYRows);
   document.getElementById('mtd-badge').textContent='MTD: '+(mtdM||'—');
+  document.getElementById('ov-rows').innerHTML=`
+    <div class="ov-row"><span class="ov-lbl">Total DD</span><span class="ov-val">${fmtInt(totalDD)}</span></div>
+    <div class="ov-row"><span class="ov-lbl">YTD Billed</span><span class="ov-val">₹${fmt(totalYtdBV)}</span></div>
+    <div class="ov-row"><span class="ov-lbl">MTD Billed</span><span class="ov-val">₹${fmt(totalMtdBV)}</span></div>
+    <div class="ov-row"><span class="ov-lbl">YTD Active</span><span class="ov-val">${fmtInt(totalYtdA)}</span></div>
+    <div class="ov-row"><span class="ov-lbl">MTD Active</span><span class="ov-val">${fmtInt(totalMtdA)}</span></div>`;
 
-  // ── Donut chart — DD count per business (respects all filters) ──
-    // Donut: YTD Active dealers per biz (MTD Active if month filter applied)
-  // Check if month filter is active — if yes use MTD active, else YTD active
-  const monthFiltered=FS.month.act.length<FS.month.all.length;
-  const donutMetric=monthFiltered?'mtdActive':'ytdActive';
-  const donutMetricLabel=monthFiltered?'MTD Active':'YTD Active';
-  const donutAllData=BIZ_LIST.map(b=>{const d=analyseFor(b);return d[donutMetric]||0;});
-  const donutColorsBase=['#EA580C','#059669','#7C3AED'];
-  const donutLabels=['HW','ERG','ST'];
-  const donutTotal=donutAllData.reduce((s,v)=>s+v,0);
-
-  // Inactive slices: heavier blur (15% opacity) when a biz is selected
-  const donutColors=donutLabels.map((lbl,i)=>{
-    if(CURRENT_BIZ==='ALL') return donutColorsBase[i];
-    return lbl===CURRENT_BIZ ? donutColorsBase[i] : donutColorsBase[i]+'26'; // ~15% opacity
-  });
-
-  if(CHARTS['donut']){CHARTS['donut'].destroy();delete CHARTS['donut']}
-  setTimeout(()=>{
-    const canvas=document.getElementById('donut-chart');
-    if(!canvas)return;
-    CHARTS['donut']=new Chart(canvas,{
-      type:'doughnut',
-      data:{
-        labels:donutLabels,
-        datasets:[{
-          data:donutAllData,
-          backgroundColor:donutColors,
-          borderColor:'#fff',
-          borderWidth:3,
-          hoverOffset:8
-        }]
-      },
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        cutout:'62%',
-        plugins:{
-          legend:{display:false},
-          tooltip:{callbacks:{
-            label:v=>v.label+': '+fmtInt(v.raw)+' Active ('+Math.round(v.raw/Math.max(donutTotal,1)*100)+'%)'
-          }}
-        },
-        onClick:(evt,els)=>{
-          if(!els||!els.length)return;
-          const idx=els[0].index;
-          const biz=donutLabels[idx];
-          // Toggle biz selection via donut click
-          if(CURRENT_BIZ===biz){
-            switchBiz('ALL'); // click same slice again = go back to ALL
-          } else {
-            switchBiz(biz);
-          }
-          // Re-highlight vtabs
-          document.querySelectorAll('.vtab').forEach(t=>{
-            t.classList.remove('active');
-            if(t.querySelector('.vtab-name')&&t.querySelector('.vtab-name').textContent===CURRENT_BIZ) t.classList.add('active');
-            if(CURRENT_BIZ==='ALL'&&t.querySelector('.vtab-name')&&t.querySelector('.vtab-name').textContent==='ALL') t.classList.add('active');
-          });
-        }
-      },
-      plugins:[{
-        id:'donutCenter',
-        afterDraw(chart){
-          const {ctx,chartArea:{top,bottom,left,right}}=chart;
-          const cx=(left+right)/2,cy=(top+bottom)/2;
-          ctx.save();
-          const activeIdx=CURRENT_BIZ==='ALL'?-1:donutLabels.indexOf(CURRENT_BIZ);
-          const centerVal=activeIdx>=0?donutAllData[activeIdx]:donutTotal;
-          const centerLbl=activeIdx>=0?CURRENT_BIZ+' '+donutMetricLabel:donutMetricLabel;
-          ctx.font='800 20px -apple-system,sans-serif';
-          ctx.fillStyle='#111827';
-          ctx.textAlign='center';
-          ctx.textBaseline='middle';
-          ctx.fillText(fmtInt(centerVal),cx,cy-9);
-          ctx.font='500 10px -apple-system,sans-serif';
-          ctx.fillStyle='#9CA3AF';
-          ctx.fillText(centerLbl,cx,cy+9);
-          ctx.restore();
-        }
-      },{
-        id:'donutSliceLabels',
-        afterDatasetsDraw(chart){
-          const ctx=chart.ctx;
-          const meta=chart.getDatasetMeta(0);
-          ctx.save();
-          meta.data.forEach((arc,i)=>{
-            const val=donutAllData[i];
-            if(!val)return;
-            const pct=Math.round(val/Math.max(donutTotal,1)*100);
-            if(pct<5)return;
-            const isActive=CURRENT_BIZ==='ALL'||donutLabels[i]===CURRENT_BIZ;
-            const angle=(arc.startAngle+arc.endAngle)/2;
-            const midR=arc.innerRadius+(arc.outerRadius-arc.innerRadius)*0.5;
-            const midX=arc.x+Math.cos(angle)*midR;
-            const midY=arc.y+Math.sin(angle)*midR;
-            ctx.globalAlpha=isActive?1:0.18; // heavily faded
-            ctx.font='700 10px -apple-system,sans-serif';
-            ctx.fillStyle='#fff';
-            ctx.textAlign='center';
-            ctx.textBaseline='middle';
-            ctx.fillText(donutLabels[i],midX,midY-6);
-            ctx.font='600 9px -apple-system,sans-serif';
-            ctx.fillText(fmtInt(val),midX,midY+6);
-            ctx.globalAlpha=1;
-          });
-          ctx.restore();
-        }
-      }]
-    });
-  },50);  // ── Combined trend chart ────────────────────────────────────────
+  // Combined trend chart
   if(CHARTS['trend-all']){CHARTS['trend-all'].destroy();delete CHARTS['trend-all']}
+  const allMonths=MONTH_ORDER.filter(m=>[...new Set(allFYRows.map(r=>r['Months']||''))].includes(m));
+  const datasets=BIZ_LIST.map(b=>{
+    const cfg=BIZ_CFG[b];
+    const rows=getFilteredRows(b);
+    return{label:b,data:allMonths.map(m=>parseFloat(rows.filter(r=>r['Months']===m).reduce((s,r)=>s+(parseFloat(r['BV'])||0),0).toFixed(4))),borderColor:cfg.line,backgroundColor:cfg.line+'15',fill:false,tension:0.42,pointRadius:4,pointBackgroundColor:cfg.line,pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:2.5};
+  });
   setTimeout(()=>{
     const canvas=document.getElementById('trend-all');
     if(!canvas)return;
-    // Months in this FY that match active month filter
-    const fyRows2=RAW.filter(r=>r['FY']===ACTIVE_FY);
-    const mSet=new Set(fyRows2.map(r=>r['Months']||'').filter(Boolean));
-    const chartMonths=MONTH_ORDER.filter(m=>mSet.has(m)&&(FS.month.act.length>=FS.month.all.length||FS.month.act.includes(m)));
-    // Datasets: ALL shows 3 lines, specific biz shows 1 line
-    const activeBizList=CURRENT_BIZ==='ALL'?BIZ_LIST:[CURRENT_BIZ];
-    const datasets=activeBizList.map(b=>{
-      const cfg=BIZ_CFG[b];
-      const rows=getFilteredRows(b);
-      const data=chartMonths.map(m=>parseFloat(rows.filter(r=>r['Months']===m).reduce((s,r)=>s+(parseFloat(r['BV'])||0),0).toFixed(2)));
-      return{label:b,data,borderColor:cfg.line,backgroundColor:cfg.line+'15',fill:true,tension:0.42,pointRadius:5,pointBackgroundColor:cfg.line,pointBorderColor:'#fff',pointBorderWidth:2.5,borderWidth:3};
-    });
-    const isAll=CURRENT_BIZ==='ALL';
     CHARTS['trend-all']=new Chart(canvas,{
       type:'line',
-      data:{labels:chartMonths.map(m=>m.slice(0,3)),datasets},
-      options:{
-        responsive:true,maintainAspectRatio:false,
+      data:{labels:allMonths.map(m=>m.slice(0,3)),datasets},
+      options:{responsive:true,maintainAspectRatio:false,
         plugins:{
-          legend:{display:isAll,position:'top',labels:{font:{size:11},padding:10,usePointStyle:true,pointStyleWidth:8}},
+          legend:{display:true,position:'top',labels:{font:{size:11},padding:12}},
           tooltip:{callbacks:{label:v=>v.dataset.label+': ₹'+fmt(v.raw)+' L'}}
         },
         scales:{
           x:{ticks:{font:{size:11},autoSkip:false},grid:{display:false},border:{display:false}},
           y:{display:false,grid:{display:false},border:{display:false}}
         },
-        layout:{padding:{top:isAll?8:36,bottom:4,left:6,right:6}}
+        layout:{padding:{top:36,bottom:4,left:4,right:4}}
       },
       plugins:[{
-        id:'trendDL',
+        id:'trendLabels',
         afterDatasetsDraw(chart){
           const ctx=chart.ctx;
           chart.data.datasets.forEach((ds,di)=>{
             const meta=chart.getDatasetMeta(di);
             if(meta.hidden)return;
-            const vOff=isAll?[0,14,28][di]||0:0; // stagger 3 lines vertically in ALL mode
             ctx.save();
             meta.data.forEach((pt,i)=>{
               const val=ds.data[i];
-              if(!val||val===0)return;
-              ctx.font=isAll?'600 9px -apple-system,sans-serif':'700 10px -apple-system,sans-serif';
+              if(val===null||val===undefined)return;
+              ctx.font='700 9px -apple-system,sans-serif';
               ctx.fillStyle=ds.borderColor;
               ctx.textAlign='center';
               ctx.textBaseline='bottom';
-              ctx.fillText('₹'+(isAll?val.toFixed(1):fmt(val)),pt.x,pt.y-6-vOff);
+              ctx.fillText('₹'+fmt(val),pt.x,pt.y-7);
             });
             ctx.restore();
           });
         }
       }]
     });
-  },80);
+  },50);
 }
 
 function renderVTabs(){
@@ -1938,7 +1529,7 @@ function switchBiz(biz){
   CURRENT_BIZ=biz;
   DRILL_OPEN=false;
   ACT_SBU.clear();renderSBUPills();
-  // refresh subgroup/customer — ALL = all businesses, otherwise scope to biz
+  // refresh subgroup/customer options
   const fyBizRows=biz==='ALL'
     ?RAW.filter(r=>r['FY']===ACTIVE_FY)
     :RAW.filter(r=>r['FY']===ACTIVE_FY&&r['Business']===biz);
@@ -1949,7 +1540,7 @@ function switchBiz(biz){
   buildDD_list('subgroup');updateDDBadge('subgroup');
   buildDD_list('customer');updateDDBadge('customer');
   renderVTabs();
-  renderOverviewAndTrend(); // refresh donut + trend for new biz
+  renderOverviewAndTrend();
   renderContent();
   updateClearAllBtn();
 }
@@ -1961,12 +1552,18 @@ function renderContent(){
   const panel=document.getElementById('content-panel');
 
   panel.innerHTML=`
-    <!-- Applied filter chips -->
+    <!-- Applied filter chips — filled by JS after render -->
     <div id="filter-chips-row" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.75rem"></div>
-
-    <!-- SBU Breakdown — moved to top -->
-    <div class="sbu-sec-title"><i class="ti ti-layout-grid" style="font-size:13px"></i> SBU Breakdown <span style="font-size:10px;font-weight:400;color:#D1D5DB">— click to filter · multi-select</span></div>
-    <div class="cat-grid${ACT_SBU.size>0?' has-sel':''}" id="sbu-grid"></div>
+    <!-- KPI row: 7 chips -->
+    <div class="kpi-row">
+      <div class="kpi-chip kc0"><div class="kc-lbl">Total DD</div><div class="kc-val">${fmtInt(d.totalDD)}</div><div class="kc-sub">Direct Dealers</div></div>
+      <div class="kpi-chip kc2"><div class="kc-lbl">YTD Active</div><div class="kc-val">${fmtInt(d.ytdActive)}</div><div class="kc-sub">DD</div></div>
+      <div class="kpi-chip kc4"><div class="kc-lbl">MTD Active</div><div class="kc-val">${fmtInt(d.mtdActive)}</div><div class="kc-sub">DD</div></div>
+      <div class="kpi-chip kc3"><div class="kc-lbl">Total Billed</div><div class="kc-val">₹${fmt(d.ytdBV)}</div><div class="kc-sub">₹ Lacs</div></div>
+      <div class="kpi-chip kc1"><div class="kc-lbl">YTD Billed</div><div class="kc-val">₹${fmt(d.ytdBV)}</div><div class="kc-sub">₹ Lacs</div></div>
+      <div class="kpi-chip kc5"><div class="kc-lbl">MTD Billed</div><div class="kc-val">₹${fmt(d.mtdBV)}</div><div class="kc-sub">₹ Lacs</div></div>
+      <div class="kpi-chip kc6"><div class="kc-lbl">Active %</div><div class="kc-val">${pct}%</div><div class="kc-sub">YTD vs total</div></div>
+    </div>
 
     <!-- Drill-down button -->
     <button class="drill-btn${DRILL_OPEN?' open':''}" id="drill-btn" style="color:${cfg.acc};border-color:${cfg.acc}" onclick="toggleDrill()">
@@ -1980,36 +1577,35 @@ function renderContent(){
       <div class="drill-section">
         <div class="drill-table-title" style="font-size:11px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:.8rem;display:flex;align-items:center;gap:6px">
           <i class="ti ti-map-pin" style="font-size:13px;color:${cfg.acc}"></i>
-          ${CURRENT_BIZ==='ALL'?'All Businesses — HW / ERG / ST State Drill-Down':CURRENT_BIZ+' — Customer State Level Detail'}
+          ${CURRENT_BIZ==='ALL'?'All Businesses — HW / ERG / ST':'${CURRENT_BIZ}'} — State Drill-Down
         </div>
-        <div style="overflow-x:auto" id="drill-table-wrap"></div>
+        <div id="drill-table-wrap" style="overflow-x:auto"></div>
       </div>
     </div>
 
     <!-- State vertical bar chart -->
     <div class="state-section">
       <div class="state-title"><i class="ti ti-map" style="font-size:13px;color:${cfg.acc}"></i> Sale by State (₹ Lacs)</div>
-      <div id="state-vchart-wrap" style="position:relative;height:320px;width:100%">
+      <div style="position:relative;height:320px;width:100%">
         <canvas id="state-vchart" role="img" aria-label="Sale by state vertical bar chart"></canvas>
       </div>
     </div>`;
 
   // Render applied filter chips
   renderFilterChips();
-
+  renderSBUCards(d,cfg);
+  if(DRILL_OPEN) requestAnimationFrame(()=>renderDrillTable());
   // Render SBU cards
   renderSBUCards(d,cfg);
-
-  // Render drill table if open
-  if(DRILL_OPEN) requestAnimationFrame(()=>requestAnimationFrame(()=>renderDrillTable()));
+  // Render drill table if open — use rAF to ensure DOM is ready
+  if(DRILL_OPEN) requestAnimationFrame(()=>renderDrillTable());
 
   // Render state vertical bar chart
   setTimeout(()=>{
     const k='state-v';
     if(CHARTS[k]){CHARTS[k].destroy();delete CHARTS[k]}
     const canvas=document.getElementById('state-vchart');
-    if(!canvas){console.warn('state-vchart canvas not found');return;}
-    if(!d.states||!d.states.length)return;
+    if(!canvas||!d.states.length)return;
     CHARTS[k]=new Chart(canvas,{
       type:'bar',
       data:{
@@ -2163,7 +1759,7 @@ function toggleDrill(){
   DRILL_OPEN=!DRILL_OPEN;
   document.getElementById('drill-btn').classList.toggle('open',DRILL_OPEN);
   document.getElementById('drill-section').style.display=DRILL_OPEN?'block':'none';
-  setTimeout(()=>renderDrillTable(),30);
+  if(DRILL_OPEN) requestAnimationFrame(()=>renderDrillTable());
 }
 
 function renderSBUCards(d,cfg){
@@ -2220,10 +1816,10 @@ function renderSummary(){
   }).join('');
   Object.values(sumCharts).forEach(c=>{try{c.destroy()}catch(e){}});
   document.getElementById('sum-trend-row').innerHTML=BIZ_LIST.map(biz=>
-  `<div class="sum-trend-card" id="stc-${biz}" style="position:relative">
+  `<div class="sum-trend-card" id="stc-${biz}">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
       <div class="sum-trend-title" style="color:${BIZ_CFG[biz].acc};margin-bottom:0">${biz} — Monthly Billing (₹ L)</div>
-      <button onclick="toggleSumFocus('${biz}')" style="border:1px solid ${BIZ_CFG[biz].acc}33;background:${BIZ_CFG[biz].acc}11;color:${BIZ_CFG[biz].acc};border-radius:8px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit" title="Focus mode">⛶ Focus</button>
+      <button id="sfb-${biz}" onclick="sumFocus('${biz}')" style="border:1px solid ${BIZ_CFG[biz].acc}55;background:${BIZ_CFG[biz].acc}11;color:${BIZ_CFG[biz].acc};border-radius:8px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">⛶ Focus</button>
     </div>
     <div class="sum-trend-wrap" id="stw-${biz}"><canvas id="sc-${biz}"></canvas></div>
   </div>`
