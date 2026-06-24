@@ -116,19 +116,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .content-panel{min-width:0}
 
 /* ── KPI Row (7 chips) ── */
-.kpi-row{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-bottom:1rem}
-.kpi-chip{border-radius:14px;padding:.8rem .9rem;box-shadow:0 3px 10px rgba(0,0,0,.08);position:relative;overflow:hidden}
-.kpi-chip::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,.35);border-radius:14px 14px 0 0}
-.kc-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.7px;font-weight:700;opacity:.72;margin-bottom:.25rem}
-.kc-val{font-size:15px;font-weight:800;line-height:1;word-break:break-all}
-.kc-sub{font-size:9px;margin-top:2px;opacity:.55}
-.kc0{background:linear-gradient(145deg,#EA580C,#C2410C);color:#fff}
-.kc1{background:linear-gradient(145deg,#7C3AED,#6D28D9);color:#fff}
-.kc2{background:linear-gradient(145deg,#059669,#047857);color:#fff}
-.kc3{background:linear-gradient(145deg,#0891B2,#0E7490);color:#fff}
-.kc4{background:linear-gradient(145deg,#D97706,#B45309);color:#fff}
-.kc5{background:linear-gradient(145deg,#DC2626,#991B1B);color:#fff}
-.kc6{background:linear-gradient(145deg,#374151,#1F2937);color:#fff}
 
 /* Drill-down button */
 .drill-btn{display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:12px;border:1.5px solid;background:transparent;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;margin-bottom:1rem;width:fit-content}
@@ -229,10 +216,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   .vtab-dd{font-size:9px}
 
   /* KPI chips: 2 per row on mobile */
-  .kpi-row{grid-template-columns:repeat(2,1fr);gap:7px}
-  .kpi-chip{padding:.7rem .8rem}
-  .kc-val{font-size:14px}
-  .kc-lbl{font-size:8px}
 
   /* SBU cards: 2 per row on mobile */
   .cat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -271,8 +254,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   .fy-separator{margin:0 2px}
 
   /* 1 KPI chip per row on tiny screens */
-  .kpi-row{grid-template-columns:1fr 1fr}
-  .kc-val{font-size:13px}
 
   /* Vtabs: 2 per row */
   .vtabs{display:grid;grid-template-columns:repeat(2,1fr)}
@@ -858,15 +839,9 @@ function renderContent(){
   panel.innerHTML=`
     <!-- Applied filter chips — filled by JS after render -->
     <div id="filter-chips-row" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.75rem"></div>
-    <!-- KPI row: 7 chips -->
-    <div class="kpi-row">
-      <div class="kpi-chip kc0"><div class="kc-lbl">Total DD</div><div class="kc-val">${fmtInt(d.totalDD)}</div><div class="kc-sub">Direct Dealers</div></div>
-      <div class="kpi-chip kc2"><div class="kc-lbl">YTD Active</div><div class="kc-val">${fmtInt(d.ytdActive)}</div><div class="kc-sub">DD</div></div>
-      <div class="kpi-chip kc4"><div class="kc-lbl">MTD Active</div><div class="kc-val">${fmtInt(d.mtdActive)}</div><div class="kc-sub">DD</div></div>
-      <div class="kpi-chip kc1"><div class="kc-lbl">YTD Billed</div><div class="kc-val">₹${fmtInt(d.ytdBV)}</div><div class="kc-sub">₹ Lacs</div></div>
-      <div class="kpi-chip kc5"><div class="kc-lbl">MTD Billed</div><div class="kc-val">₹${fmtInt(d.mtdBV)}</div><div class="kc-sub">₹ Lacs</div></div>
-      <div class="kpi-chip kc6"><div class="kc-lbl">Active %</div><div class="kc-val">${pct}%</div><div class="kc-sub">YTD vs total</div></div>
-    </div>
+    <!-- SBU cards -->
+    <div class="sbu-sec-title"><i class="ti ti-layout-grid" style="font-size:13px"></i> SBU Breakdown <span style="font-size:10px;font-weight:400;color:#D1D5DB">— click to filter · multi-select</span></div>
+    <div class="cat-grid${ACT_SBU.size>0?' has-sel':''}" id="sbu-grid"></div>
 
     <!-- Drill-down button -->
     <button class="drill-btn${DRILL_OPEN?' open':''}" id="drill-btn" style="color:${cfg.acc};border-color:${cfg.acc}" onclick="toggleDrill()">
@@ -899,9 +874,7 @@ function renderContent(){
       </div>
     </div>
 
-    <!-- SBU cards -->
-    <div class="sbu-sec-title"><i class="ti ti-layout-grid" style="font-size:13px"></i> SBU Breakdown <span style="font-size:10px;font-weight:400;color:#D1D5DB">— click to filter · multi-select</span></div>
-    <div class="cat-grid${ACT_SBU.size>0?' has-sel':''}" id="sbu-grid"></div>
+
 
     <!-- State vertical bar chart -->
     <div class="state-section">
