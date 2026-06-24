@@ -85,10 +85,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .sbu-pill:hover{background:#374151}
 
 /* ── TOP SECTION: Overview card + Trend ── */
-.top-section{display:grid;grid-template-columns:260px 1fr;gap:14px;margin-bottom:1rem;align-items:start}
-.donut-card{background:#fff;border-radius:20px;padding:1.1rem 1rem;border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 16px rgba(0,0,0,.07);display:flex;flex-direction:column;align-items:center;height:fit-content;align-self:start}
+.top-section{display:grid;grid-template-columns:260px 1fr;gap:14px;margin-bottom:1rem;align-items:stretch}
+.donut-card{background:#fff;border-radius:20px;padding:1.1rem 1rem;border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 16px rgba(0,0,0,.07);display:flex;flex-direction:column;align-items:center}
 .donut-title{font-size:10px;color:#9CA3AF;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:.6rem;align-self:flex-start}
-.donut-wrap{position:relative;width:100%;height:190px}
+.donut-wrap{position:relative;width:100%;flex:1;min-height:200px}
 
 .trend-card{background:#fff;border-radius:20px;padding:1.2rem 1.4rem;border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 16px rgba(0,0,0,.06);display:flex;flex-direction:column}
 .trend-title{font-size:10px;color:#9CA3AF;margin-bottom:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
@@ -727,10 +727,12 @@ function renderOverviewAndTrend(){
   // Combined trend chart
   if(CHARTS['trend-all']){CHARTS['trend-all'].destroy();delete CHARTS['trend-all']}
   const allMonths=MONTH_ORDER.filter(m=>[...new Set(allFYRows.map(r=>r['Months']||''))].includes(m));
-  const datasets=BIZ_LIST.map(b=>{
+  // Show all 3 lines in ALL mode, only the selected biz line otherwise
+  const activeBizList=CURRENT_BIZ==='ALL'?BIZ_LIST:[CURRENT_BIZ];
+  const datasets=activeBizList.map(b=>{
     const cfg=BIZ_CFG[b];
     const rows=getFilteredRows(b);
-    return{label:b,data:allMonths.map(m=>parseFloat(rows.filter(r=>r['Months']===m).reduce((s,r)=>s+(parseFloat(r['BV'])||0),0).toFixed(4))),borderColor:cfg.line,backgroundColor:cfg.line+'15',fill:false,tension:0.42,pointRadius:4,pointBackgroundColor:cfg.line,pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:2.5};
+    return{label:b,data:allMonths.map(m=>parseFloat(rows.filter(r=>r['Months']===m).reduce((s,r)=>s+(parseFloat(r['BV'])||0),0).toFixed(4))),borderColor:cfg.line,backgroundColor:cfg.line+'18',fill:false,tension:0.42,pointRadius:5,pointBackgroundColor:cfg.line,pointBorderColor:'#fff',pointBorderWidth:2.5,borderWidth:3};
   });
   setTimeout(()=>{
     const canvas=document.getElementById('trend-all');
@@ -752,6 +754,8 @@ function renderOverviewAndTrend(){
       plugins:[{
         id:'trendLabels',
         afterDatasetsDraw(chart){
+          // Only show data labels when 1 line visible (not ALL mode with 3 lines)
+          if(chart.data.datasets.length>1)return;
           const ctx=chart.ctx;
           chart.data.datasets.forEach((ds,di)=>{
             const meta=chart.getDatasetMeta(di);
@@ -759,12 +763,12 @@ function renderOverviewAndTrend(){
             ctx.save();
             meta.data.forEach((pt,i)=>{
               const val=ds.data[i];
-              if(val===null||val===undefined)return;
-              ctx.font='700 9px -apple-system,sans-serif';
+              if(val===null||val===undefined||val===0)return;
+              ctx.font='700 10px -apple-system,sans-serif';
               ctx.fillStyle=ds.borderColor;
               ctx.textAlign='center';
               ctx.textBaseline='bottom';
-              ctx.fillText('₹'+fmt(val),pt.x,pt.y-7);
+              ctx.fillText('₹'+fmt(val),pt.x,pt.y-8);
             });
             ctx.restore();
           });
@@ -826,9 +830,8 @@ function renderContent(){
       <div class="kpi-chip kc0"><div class="kc-lbl">Total DD</div><div class="kc-val">${fmtInt(d.totalDD)}</div><div class="kc-sub">Direct Dealers</div></div>
       <div class="kpi-chip kc2"><div class="kc-lbl">YTD Active</div><div class="kc-val">${fmtInt(d.ytdActive)}</div><div class="kc-sub">DD</div></div>
       <div class="kpi-chip kc4"><div class="kc-lbl">MTD Active</div><div class="kc-val">${fmtInt(d.mtdActive)}</div><div class="kc-sub">DD</div></div>
-      <div class="kpi-chip kc3"><div class="kc-lbl">Total Billed</div><div class="kc-val">₹${fmt(d.ytdBV)}</div><div class="kc-sub">₹ Lacs</div></div>
-      <div class="kpi-chip kc1"><div class="kc-lbl">YTD Billed</div><div class="kc-val">₹${fmt(d.ytdBV)}</div><div class="kc-sub">₹ Lacs</div></div>
-      <div class="kpi-chip kc5"><div class="kc-lbl">MTD Billed</div><div class="kc-val">₹${fmt(d.mtdBV)}</div><div class="kc-sub">₹ Lacs</div></div>
+      <div class="kpi-chip kc1"><div class="kc-lbl">YTD Billed</div><div class="kc-val">₹${fmtInt(d.ytdBV)}</div><div class="kc-sub">₹ Lacs</div></div>
+      <div class="kpi-chip kc5"><div class="kc-lbl">MTD Billed</div><div class="kc-val">₹${fmtInt(d.mtdBV)}</div><div class="kc-sub">₹ Lacs</div></div>
       <div class="kpi-chip kc6"><div class="kc-lbl">Active %</div><div class="kc-val">${pct}%</div><div class="kc-sub">YTD vs total</div></div>
     </div>
 
