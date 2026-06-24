@@ -85,16 +85,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .sbu-pill:hover{background:#374151}
 
 /* ── TOP SECTION: Overview card + Trend ── */
-.top-section{display:grid;grid-template-columns:260px 1fr;gap:14px;margin-bottom:1rem;align-items:stretch}
-.donut-card{background:#fff;border-radius:20px;padding:1.2rem 1rem;border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 16px rgba(0,0,0,.07);display:flex;flex-direction:column;align-items:center}
+.top-section{display:grid;grid-template-columns:260px 1fr;gap:14px;margin-bottom:1rem;align-items:start}
+.donut-card{background:#fff;border-radius:20px;padding:1.1rem 1rem;border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 16px rgba(0,0,0,.07);display:flex;flex-direction:column;align-items:center;height:fit-content;align-self:start}
 .donut-title{font-size:10px;color:#9CA3AF;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:.6rem;align-self:flex-start}
-.donut-wrap{position:relative;width:100%;flex:1;min-height:140px}
-.donut-legend{display:flex;flex-direction:column;gap:5px;width:100%;margin-top:.7rem}
-.donut-leg-item{display:flex;align-items:center;justify-content:space-between;font-size:11px}
-.donut-leg-left{display:flex;align-items:center;gap:6px}
-.donut-leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.donut-leg-name{color:#6B7280;font-weight:500}
-.donut-leg-val{font-weight:700;color:#111827}
+.donut-wrap{position:relative;width:100%;height:190px}
+
 .trend-card{background:#fff;border-radius:20px;padding:1.2rem 1.4rem;border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 16px rgba(0,0,0,.06);display:flex;flex-direction:column}
 .trend-title{font-size:10px;color:#9CA3AF;margin-bottom:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
 .trend-wrap{position:relative;flex:1;min-height:130px}
@@ -108,7 +103,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .vtab::before{content:'';position:absolute;top:-20px;right:-20px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.1)}
 .vtab-name{font-size:14px;font-weight:800;color:#fff;letter-spacing:.5px;line-height:1}
 .vtab-dd{font-size:10px;color:rgba(255,255,255,.72);font-weight:600;white-space:nowrap}
-.vtab.hw{background:linear-gradient(135deg,#1D4ED8,#2563EB);box-shadow:0 4px 14px rgba(29,78,216,.25)}
+.vtab.hw{background:linear-gradient(135deg,#C2410C,#EA580C);box-shadow:0 4px 14px rgba(234,88,12,.3)}
 .vtab.erg{background:linear-gradient(135deg,#065F46,#059669);box-shadow:0 4px 14px rgba(5,150,105,.25)}
 .vtab.st{background:linear-gradient(135deg,#5B21B6,#7C3AED);box-shadow:0 4px 14px rgba(124,58,237,.25)}
 .vtab:hover{transform:translateY(-2px);opacity:.92}
@@ -127,7 +122,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .kc-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.7px;font-weight:700;opacity:.72;margin-bottom:.25rem}
 .kc-val{font-size:15px;font-weight:800;line-height:1;word-break:break-all}
 .kc-sub{font-size:9px;margin-top:2px;opacity:.55}
-.kc0{background:linear-gradient(145deg,#2563EB,#1D4ED8);color:#fff}
+.kc0{background:linear-gradient(145deg,#EA580C,#C2410C);color:#fff}
 .kc1{background:linear-gradient(145deg,#7C3AED,#6D28D9);color:#fff}
 .kc2{background:linear-gradient(145deg,#059669,#047857);color:#fff}
 .kc3{background:linear-gradient(145deg,#0891B2,#0E7490);color:#fff}
@@ -196,7 +191,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .sum-table tr:hover td{background:#F9FAFB}
 .sum-biz-badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;color:#fff}
 .vtab.all{background:linear-gradient(150deg,#374151,#4B5563);box-shadow:0 4px 14px rgba(55,65,81,.25)}
-.biz-hw{background:#1D4ED8}.biz-erg{background:#0F6E56}.biz-st{background:#7C3AED}
+.biz-hw{background:#EA580C}.biz-erg{background:#0F6E56}.biz-st{background:#7C3AED}
 .no-data{text-align:center;color:#9CA3AF;font-size:13px;padding:1.5rem;grid-column:1/-1}
 
 /* ══════════════════════════════════════════════
@@ -398,7 +393,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="donut-card">
         <div class="donut-title"><i class="ti ti-chart-pie" style="font-size:12px;vertical-align:-1px"></i> DD Count by Business</div>
         <div class="donut-wrap"><canvas id="donut-chart" role="img" aria-label="Dealer count donut chart"></canvas></div>
-        <div class="donut-legend" id="donut-legend"></div>
+
       </div>
       <div class="trend-card">
         <div class="trend-title">Monthly Billing Trend (₹ Lacs) — All Business</div>
@@ -440,7 +435,7 @@ const ACT_SBU=new Set();
 const MONTH_ORDER=['April','May','June','July','August','September','October','November','December','January','February','March'];
 const BIZ_LIST=['HW','ERG','ST'];
 const BIZ_CFG={
-  HW: {acc:'#2563EB',line:'#60A5FA',cls:'hw',label:'HW'},
+  HW: {acc:'#EA580C',line:'#FB923C',cls:'hw',label:'HW'},
   ERG:{acc:'#059669',line:'#34D399',cls:'erg',label:'ERG'},
   ST: {acc:'#7C3AED',line:'#A78BFA',cls:'st',label:'ST'}
 };
@@ -648,7 +643,7 @@ function renderOverviewAndTrend(){
 
   // ── Donut chart — DD count per business (respects all filters) ──
   const donutData=BIZ_LIST.map(b=>analyseFor(b).totalDD);
-  const donutColors=['#2563EB','#059669','#7C3AED'];
+  const donutColors=['#EA580C','#059669','#7C3AED'];
   const donutLabels=['HW','ERG','ST'];
   const donutTotal=donutData.reduce((s,v)=>s+v,0);
 
@@ -674,7 +669,7 @@ function renderOverviewAndTrend(){
         maintainAspectRatio:false,
         cutout:'68%',
         plugins:{
-          legend:{display:false},
+          legend:{display:true,position:'bottom',labels:{font:{size:10},padding:8,usePointStyle:true,pointStyleWidth:8}},
           tooltip:{callbacks:{
             label:v=>v.label+': '+fmtInt(v.raw)+' DD ('+Math.round(v.raw/Math.max(donutTotal,1)*100)+'%)'
           }}
@@ -686,18 +681,18 @@ function renderOverviewAndTrend(){
           const {ctx,chartArea:{top,bottom,left,right}}=chart;
           const cx=(left+right)/2, cy=(top+bottom)/2;
           ctx.save();
-          ctx.font='700 22px -apple-system,sans-serif';
+          ctx.font='800 20px -apple-system,sans-serif';
           ctx.fillStyle='#111827';
           ctx.textAlign='center';
           ctx.textBaseline='middle';
-          ctx.fillText(fmtInt(donutTotal),cx,cy-8);
+          ctx.fillText(fmtInt(donutTotal),cx,cy-7);
           ctx.font='500 10px -apple-system,sans-serif';
           ctx.fillStyle='#9CA3AF';
-          ctx.fillText('Total DD',cx,cy+10);
+          ctx.fillText('Total DD',cx,cy+9);
           ctx.restore();
         }
       },{
-        id:'donutLabels',
+        id:'donutSliceLabels',
         afterDatasetsDraw(chart){
           const ctx=chart.ctx;
           const meta=chart.getDatasetMeta(0);
@@ -706,30 +701,27 @@ function renderOverviewAndTrend(){
             const val=donutData[i];
             if(!val)return;
             const pct=Math.round(val/Math.max(donutTotal,1)*100);
+            if(pct<5)return;
+            // Position label outside slice with a line
             const angle=(arc.startAngle+arc.endAngle)/2;
-            const r=(arc.outerRadius+arc.innerRadius)/2;
-            const x=arc.x+Math.cos(angle)*r;
-            const y=arc.y+Math.sin(angle)*r;
+            const outerR=arc.outerRadius;
+            const midX=arc.x+Math.cos(angle)*(arc.innerRadius+(outerR-arc.innerRadius)*0.5);
+            const midY=arc.y+Math.sin(angle)*(arc.innerRadius+(outerR-arc.innerRadius)*0.5);
+            // Label on slice
             ctx.font='700 10px -apple-system,sans-serif';
             ctx.fillStyle='#fff';
             ctx.textAlign='center';
             ctx.textBaseline='middle';
-            if(pct>=6) ctx.fillText(pct+'%',x,y);
+            ctx.fillText(donutLabels[i],midX,midY-6);
+            ctx.font='600 9px -apple-system,sans-serif';
+            ctx.fillText(fmtInt(val)+' DD',midX,midY+5);
           });
           ctx.restore();
         }
       }]
     });
 
-    // Legend
-    document.getElementById('donut-legend').innerHTML=donutLabels.map((lbl,i)=>`
-      <div class="donut-leg-item">
-        <div class="donut-leg-left">
-          <div class="donut-leg-dot" style="background:${donutColors[i]}"></div>
-          <span class="donut-leg-name">${lbl}</span>
-        </div>
-        <span class="donut-leg-val">${fmtInt(donutData[i])} DD</span>
-      </div>`).join('');
+
   },50);
 
   // Combined trend chart
@@ -1091,7 +1083,7 @@ function renderSummary(){
   document.getElementById('sum-overview-cards').innerHTML=BIZ_LIST.map(biz=>{
     const d=analyseFor(biz);const cfg=BIZ_CFG[biz];
     const pct=d.totalDD>0?Math.round(d.ytdActive/d.totalDD*100):0;
-    const gradMap={HW:'linear-gradient(135deg,#1D4ED8,#3B82F6)',ERG:'linear-gradient(135deg,#065F46,#10B981)',ST:'linear-gradient(135deg,#5B21B6,#8B5CF6)'};
+    const gradMap={HW:'linear-gradient(135deg,#C2410C,#EA580C)',ERG:'linear-gradient(135deg,#065F46,#10B981)',ST:'linear-gradient(135deg,#5B21B6,#8B5CF6)'};
     return`<div class="sum-card" style="background:${gradMap[biz]}">
       <div class="sum-card-title">${biz} — ${ACTIVE_FY}</div>
       <div class="sum-stat"><span class="sum-stat-lbl">Total DD</span><span class="sum-stat-val">${fmtInt(d.totalDD)}</span></div>
