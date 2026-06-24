@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direct Dealer Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(160deg,#EEF2FF 0%,#F0F2F7 50%,#F5F3FF 100%);min-height:100vh;padding:1.5rem;color:#111827}
+
+/* Upload */
+.upload-screen{min-height:80vh;display:flex;align-items:center;justify-content:center}
+.drop-box{width:100%;max-width:500px;border:2px dashed #C4B5FD;border-radius:16px;padding:3rem 2rem;text-align:center;cursor:pointer;background:#fff;transition:.2s}
+.drop-box:hover,.drop-box.drag{border-color:#7F77DD;background:#EEEDFE}
+.drop-box input{display:none}
+.up-icon{font-size:52px;color:#7F77DD;margin-bottom:1rem}
+.up-title{font-size:18px;font-weight:700;color:#111827;margin-bottom:.4rem}
+.up-sub{font-size:13px;color:#6B7280;line-height:1.6;margin-bottom:1.4rem}
+.up-btn{padding:10px 28px;border-radius:24px;border:none;background:#7F77DD;color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+.up-btn:hover{background:#534AB7}
+.err{color:#E24B4A;font-size:12px;margin-top:.8rem;display:none}
+
+/* Dashboard */
+#dash{display:none}
+
+/* Top bar */
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.6rem}
+.dash-title{font-size:20px;font-weight:700;color:#111827}
+.pill{font-size:11px;padding:3px 12px;border-radius:20px;font-weight:600;margin-left:7px}
+.pill-fy{background:#EEEDFE;color:#534AB7}
+.pill-mtd{background:#D1FAE5;color:#065F46}
+.top-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.icon-btn{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:20px;border:1px solid #E5E7EB;background:#fff;font-size:12px;color:#6B7280;cursor:pointer;font-family:inherit;white-space:nowrap}
+.icon-btn:hover{background:#F9FAFB}
+.icon-btn.danger{color:#EF4444;border-color:#FCA5A5}
+.icon-btn.danger:hover{background:#FEF2F2}
+
+/* FY Tabs */
+.fy-row{display:flex;align-items:center;gap:0;margin-bottom:1rem;background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:4px;width:fit-content;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.fy-tabs{display:flex;gap:2px;margin-bottom:0}
+.fy-tab{padding:7px 18px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:transparent;color:#6B7280;transition:.15s;font-family:inherit}
+.fy-tab:hover{background:#F3F4F6;color:#374151}
+.fy-tab.active{background:#111827;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.fy-separator{width:1px;background:#E5E7EB;height:24px;margin:0 4px;align-self:center;flex-shrink:0}
+
+/* Filters bar */
+.filters-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem;min-height:38px}
+.filters-lbl{font-size:11px;color:#9CA3AF;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+
+/* Dropdown filter button */
+.filter-wrap{position:relative}
+.filter-btn{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:20px;border:1px solid #E5E7EB;background:#fff;cursor:pointer;font-size:12px;color:#374151;font-weight:500;white-space:nowrap;transition:.15s;font-family:inherit}
+.filter-btn:hover{background:#F9FAFB}
+.filter-btn.active-filter{border-color:#7C3AED;background:#F5F3FF;color:#6D28D9}
+.fbadge{background:#7C3AED;color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;font-weight:700}
+.filter-dropdown{display:none;position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid #E5E7EB;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.14);width:240px;z-index:9999}
+.filter-dropdown.open{display:block}
+.fd-head{display:flex;align-items:center;justify-content:space-between;padding:10px 13px 8px;border-bottom:1px solid #F3F4F6}
+.fd-head-title{font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px}
+.fd-head-actions{display:flex;gap:4px}
+.fd-action-btn{font-size:11px;cursor:pointer;display:flex;align-items:center;gap:2px;padding:3px 7px;border-radius:7px;border:none;background:none;font-family:inherit}
+.fd-sel-all{color:#7C3AED}.fd-sel-all:hover{background:#F5F3FF}
+.fd-clr-all{color:#EF4444}.fd-clr-all:hover{background:#FEF2F2}
+.fd-search{padding:7px 11px;border-bottom:1px solid #F3F4F6}
+.fd-search input{width:100%;border:1px solid #E5E7EB;border-radius:8px;padding:5px 9px;font-size:12px;outline:none;color:#374151;font-family:inherit}
+.fd-search input:focus{border-color:#7C3AED}
+.fd-list{max-height:190px;overflow-y:auto;padding:4px 0}
+.fd-item{display:flex;align-items:center;gap:8px;padding:7px 13px;cursor:pointer;font-size:12px;color:#374151}
+.fd-item:hover{background:#F9FAFB}
+.fd-item input[type=checkbox]{accent-color:#7C3AED;width:14px;height:14px;cursor:pointer;flex-shrink:0}
+.fd-foot{display:flex;gap:8px;padding:9px 11px;border-top:1px solid #F3F4F6}
+.fd-ok{flex:1;padding:7px;border-radius:8px;background:#7C3AED;color:#fff;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+.fd-ok:hover{background:#6D28D9}
+.fd-cancel{flex:1;padding:7px;border-radius:8px;background:#F3F4F6;color:#374151;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+.fd-cancel:hover{background:#E5E7EB}
+.sbu-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;background:#111827;color:#fff;font-size:11px;font-weight:600;cursor:pointer}
+.sbu-pill:hover{background:#374151}
+
+/* Page tabs (Detail / Summary) */
+.page-tabs{display:flex;gap:2px;margin-bottom:0}
+.page-tab{padding:7px 16px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:transparent;color:#6B7280;transition:.15s;font-family:inherit;display:flex;align-items:center;gap:5px}
+.page-tab:hover{background:#F5F3FF;color:#6D28D9}
+.page-tab.active{background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;box-shadow:0 2px 8px rgba(124,58,237,.3)}
+
+/* Biz Tabs — segmented control style */
+.biz-tabs{display:flex;gap:0;margin-bottom:1.1rem;background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:4px;width:fit-content;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.biz-tab{padding:9px 28px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:#6B7280;transition:.2s;font-family:inherit;letter-spacing:.2px}
+.biz-tab:hover{background:#F3F4F6;color:#374151}
+.biz-tab.hw-a{background:linear-gradient(135deg,#1D4ED8,#2563EB);color:#fff;box-shadow:0 3px 10px rgba(29,78,216,.35)}
+.biz-tab.erg-a{background:linear-gradient(135deg,#065F46,#059669);color:#fff;box-shadow:0 3px 10px rgba(15,110,86,.35)}
+.biz-tab.st-a{background:linear-gradient(135deg,#5B21B6,#7C3AED);color:#fff;box-shadow:0 3px 10px rgba(124,58,237,.35)}
+
+/* Hero — same wide card as before, stats now vertical inside */
+.hero-row{display:grid;grid-template-columns:300px 1fr;gap:14px;margin-bottom:1.1rem;align-items:stretch}
+.hero-card{border-radius:20px;padding:1.6rem 1.8rem;display:flex;flex-direction:column;box-shadow:0 12px 32px rgba(0,0,0,.16);position:relative;overflow:hidden}
+.hero-card::before{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.08)}
+.hero-card::after{content:'';position:absolute;bottom:-30px;left:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.06)}
+.hero-lbl{font-size:9px;font-weight:700;letter-spacing:1.2px;color:rgba(255,255,255,.5);margin-bottom:1.1rem;text-transform:uppercase;position:relative;z-index:1}
+.hero-stats-vert{display:flex;flex-direction:column;flex:1;gap:0;position:relative;z-index:1}
+.hero-stat-row{display:flex;align-items:center;justify-content:space-between;padding:.58rem 0;border-bottom:1px solid rgba(255,255,255,.12)}
+.hero-stat-row:last-child{border-bottom:none}
+.hlbl{font-size:11px;color:rgba(255,255,255,.62);font-weight:500}
+.hval{font-size:20px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.3px}
+
+/* Trend */
+.trend-card{background:#fff;border-radius:20px;padding:1.3rem;border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 16px rgba(0,0,0,.06);display:flex;flex-direction:column}
+.trend-title{font-size:10px;color:#9CA3AF;margin-bottom:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.trend-wrap{position:relative;flex:1;min-height:110px}
+
+/* KPI strip */
+.kpi-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:1.1rem}
+.kpi-box{border-radius:16px;padding:1.1rem 1.2rem;box-shadow:0 4px 14px rgba(0,0,0,.1);position:relative;overflow:hidden}
+.kpi-box::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,.35);border-radius:16px 16px 0 0}
+.kb-label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:.4rem;font-weight:700;opacity:.7}
+.kb-val{font-size:22px;font-weight:800;line-height:1.1;word-break:break-all;letter-spacing:-.3px}
+.kb-sub{font-size:10px;margin-top:4px;opacity:.55}
+.kc0{background:linear-gradient(145deg,#2563EB,#1D4ED8);color:#fff}
+.kc1{background:linear-gradient(145deg,#7C3AED,#6D28D9);color:#fff}
+.kc2{background:linear-gradient(145deg,#059669,#047857);color:#fff}
+.kc3{background:linear-gradient(145deg,#D97706,#B45309);color:#fff}
+.kc4{background:linear-gradient(145deg,#DC2626,#991B1B);color:#fff}
+
+/* SBU cards */
+.sbu-sec-title{font-size:11px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:.7rem;display:flex;align-items:center;gap:7px}
+.cat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-bottom:11px}
+.cat-card{border-radius:20px;padding:1.3rem;position:relative;overflow:hidden;min-height:148px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 24px rgba(0,0,0,.12);cursor:pointer;transition:transform .18s,box-shadow .18s,opacity .2s,filter .2s;border:3px solid transparent}
+.cat-card::before{content:"";position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,0));pointer-events:none}
+.cat-card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.16)}
+.cat-card.sel{border-color:rgba(255,255,255,.8);box-shadow:0 0 0 3px rgba(0,0,0,.22),0 10px 28px rgba(0,0,0,.2);transform:translateY(-2px)}
+.cat-grid.has-sel .cat-card:not(.sel){opacity:.35;filter:saturate(0.22) brightness(0.88);pointer-events:auto;transform:none !important}
+.cat-grid.has-sel .cat-card:not(.sel):hover{opacity:.52;filter:saturate(0.45) brightness(1)}
+.cc-icon{font-size:26px;margin-bottom:.4rem;display:block;position:relative;z-index:1}
+.cc-name{font-size:9px;font-weight:700;letter-spacing:.9px;color:rgba(255,255,255,.78);margin-bottom:.2rem;position:relative;z-index:1}
+.cc-val{font-size:19px;font-weight:800;color:#fff;line-height:1;position:relative;z-index:1;word-break:break-all}
+.cc-pct{font-size:10px;color:rgba(255,255,255,.65);position:relative;z-index:1;margin-top:3px}
+.cc-prog{height:3px;background:rgba(255,255,255,.18);border-radius:2px;margin-top:.6rem;overflow:hidden;position:relative;z-index:1}
+.cc-fill{height:100%;background:rgba(255,255,255,.65);border-radius:2px}
+.cc-c1{position:absolute;bottom:-26px;right:-26px;width:95px;height:95px;border-radius:50%;background:rgba(255,255,255,.07)}
+.cc-c2{position:absolute;bottom:12px;right:-42px;width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.05)}
+
+/* Region */
+.region-row{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.rpanel{background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:20px;padding:1.2rem 1.3rem;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.rp-title{font-size:10px;font-weight:700;color:#9CA3AF;margin-bottom:.9rem;text-transform:uppercase;letter-spacing:.7px}
+.rp-item{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.rp-name{font-size:12px;color:#6B7280;width:55px;flex-shrink:0}
+.rp-track{flex:1;height:7px;border-radius:4px;background:#F3F4F6;overflow:hidden}
+.rp-fill{height:100%;border-radius:4px}
+.rp-val{font-size:11px;font-weight:700;color:#111827;min-width:60px;text-align:right}
+.no-data{text-align:center;color:#9CA3AF;font-size:13px;padding:1.5rem;grid-column:1/-1}
+
+/* ── SUMMARY PAGE ── */
+#summary-page{display:none}
+.summary-header{font-size:14px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.6px;margin-bottom:.9rem;display:flex;align-items:center;gap:6px}
+.summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:1.5rem}
+.sum-card{border-radius:18px;padding:1.4rem;color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.sum-card-title{font-size:11px;font-weight:700;letter-spacing:.8px;opacity:.7;margin-bottom:.9rem;text-transform:uppercase}
+.sum-stat{display:flex;justify-content:space-between;align-items:center;padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.12)}
+.sum-stat:last-child{border-bottom:none}
+.sum-stat-lbl{font-size:11px;opacity:.75;font-weight:500}
+.sum-stat-val{font-size:14px;font-weight:800}
+.sum-trend-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:1.5rem}
+.sum-trend-card{background:#fff;border-radius:16px;padding:1.2rem;border:1px solid #F3F4F6;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.sum-trend-title{font-size:12px;font-weight:700;color:#374151;margin-bottom:.6rem}
+.sum-trend-wrap{position:relative;height:130px}
+.sum-table-wrap{background:#fff;border-radius:16px;padding:1.2rem;border:1px solid #F3F4F6;box-shadow:0 1px 4px rgba(0,0,0,.05);overflow-x:auto}
+.sum-table{width:100%;border-collapse:collapse;font-size:12px}
+.sum-table th{background:#F9FAFB;color:#6B7280;font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;text-align:left;border-bottom:1px solid #E5E7EB;font-weight:700}
+.sum-table td{padding:8px 12px;border-bottom:1px solid #F9FAFB;color:#374151;font-weight:500}
+.sum-table tr:last-child td{border-bottom:none}
+.sum-table tr:hover td{background:#F9FAFB}
+.sum-biz-badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;color:#fff}
+.biz-hw{background:#1D4ED8}.biz-erg{background:#0F6E56}.biz-st{background:#7C3AED}
+</style>
+</head>
+<body>
+
+<!-- Loading Screen (auto-fetch) -->
+<div id="upload-screen" class="upload-screen">
+  <div class="drop-box" id="drop-zone" style="cursor:default">
+    <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none">
+    <div class="up-icon" id="up-icon-el"><i class="ti ti-cloud-download"></i></div>
+    <p class="up-title" id="up-title-el">Loading Dashboard Data…</p>
+    <p class="up-sub" id="up-sub-el">Fetching latest data from OneDrive, please wait.</p>
+    <div id="up-spinner" style="margin:1rem auto;width:36px;height:36px;border:3px solid #E5E7EB;border-top-color:#7F77DD;border-radius:50%;animation:spin .8s linear infinite"></div>
+    <p class="err" id="err"></p>
+    <div id="manual-fallback" style="display:none;margin-top:1rem;border-top:1px solid #E5E7EB;padding-top:1rem">
+      <p style="font-size:12px;color:#6B7280;margin-bottom:.8rem">Could not auto-load. Please upload the file manually:</p>
+      <button class="up-btn" onclick="document.getElementById('file-input').click()"><i class="ti ti-upload"></i>&nbsp; Upload Excel Manually</button>
+    </div>
+  </div>
+</div>
+<style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
+
+<!-- Dashboard -->
+<div id="dash">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
+      <span class="dash-title">Direct Dealer Dashboard</span>
+      <span class="pill pill-fy" id="fy-badge"></span>
+      <span class="pill pill-mtd" id="mtd-badge"></span>
+    </div>
+    <div class="top-right">
+      <button class="icon-btn danger" id="clear-all-btn" onclick="clearAllFilters()" style="display:none">
+        <i class="ti ti-filter-off" style="font-size:13px"></i> Clear all filters
+      </button>
+      <button class="icon-btn" onclick="autoFetchFromSharePoint();document.getElementById('upload-screen').style.display='flex';document.getElementById('dash').style.display='none';document.getElementById('up-spinner').style.display='block';document.getElementById('up-title-el').textContent='Refreshing data…';document.getElementById('up-sub-el').textContent='Fetching latest from OneDrive…';document.getElementById('manual-fallback').style.display='none';" style="color:#059669;border-color:#6EE7B7"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh Data</button>
+      <button class="icon-btn" onclick="resetApp()"><i class="ti ti-upload" style="font-size:13px"></i> Upload File</button>
+    </div>
+  </div>
+
+  <!-- FY Tabs + Page Tabs — same pill row -->
+  <div class="fy-row">
+    <div class="fy-tabs" id="fy-tabs"></div>
+    <div class="fy-separator"></div>
+    <div class="page-tabs">
+      <button class="page-tab active" id="ptab-detail" onclick="setPage('detail')"><i class="ti ti-layout-dashboard" style="font-size:12px"></i> Detail View</button>
+      <button class="page-tab" id="ptab-summary" onclick="setPage('summary')"><i class="ti ti-table" style="font-size:12px"></i> Summary</button>
+    </div>
+  </div>
+
+  <!-- Filters bar -->
+  <div class="filters-bar" id="filters-bar">
+    <span class="filters-lbl"><i class="ti ti-adjustments-horizontal" style="font-size:12px;vertical-align:-1px"></i> Filters</span>
+    <!-- Month -->
+    <div class="filter-wrap" id="fw-month">
+      <button class="filter-btn" id="fb-month" onclick="toggleDD('month')">
+        <i class="ti ti-calendar" style="font-size:13px"></i><span id="fl-month">All Months</span>
+        <span class="fbadge" id="fbadge-month" style="display:none"></span>
+        <i class="ti ti-chevron-down" style="font-size:11px"></i>
+      </button>
+      <div class="filter-dropdown" id="fd-month">
+        <div class="fd-head"><span class="fd-head-title">Month</span>
+          <div class="fd-head-actions">
+            <button class="fd-action-btn fd-sel-all" onclick="selectAllDD('month')"><i class="ti ti-check-all" style="font-size:11px"></i> All</button>
+            <button class="fd-action-btn fd-clr-all" onclick="clearDD('month')"><i class="ti ti-x" style="font-size:11px"></i> None</button>
+          </div>
+        </div>
+        <div class="fd-search"><input type="text" id="fs-month" placeholder="Search month…" oninput="searchDD('month')"></div>
+        <div class="fd-list" id="flist-month"></div>
+        <div class="fd-foot"><button class="fd-cancel" onclick="cancelDD('month')">Cancel</button><button class="fd-ok" onclick="applyDD('month')"><i class="ti ti-check" style="font-size:11px"></i> Apply</button></div>
+      </div>
+    </div>
+    <!-- State -->
+    <div class="filter-wrap" id="fw-state">
+      <button class="filter-btn" id="fb-state" onclick="toggleDD('state')">
+        <i class="ti ti-map-pin" style="font-size:13px"></i><span id="fl-state">All States</span>
+        <span class="fbadge" id="fbadge-state" style="display:none"></span>
+        <i class="ti ti-chevron-down" style="font-size:11px"></i>
+      </button>
+      <div class="filter-dropdown" id="fd-state">
+        <div class="fd-head"><span class="fd-head-title">Customer State</span>
+          <div class="fd-head-actions">
+            <button class="fd-action-btn fd-sel-all" onclick="selectAllDD('state')"><i class="ti ti-check-all" style="font-size:11px"></i> All</button>
+            <button class="fd-action-btn fd-clr-all" onclick="clearDD('state')"><i class="ti ti-x" style="font-size:11px"></i> None</button>
+          </div>
+        </div>
+        <div class="fd-search"><input type="text" id="fs-state" placeholder="Search state…" oninput="searchDD('state')"></div>
+        <div class="fd-list" id="flist-state"></div>
+        <div class="fd-foot"><button class="fd-cancel" onclick="cancelDD('state')">Cancel</button><button class="fd-ok" onclick="applyDD('state')"><i class="ti ti-check" style="font-size:11px"></i> Apply</button></div>
+      </div>
+    </div>
+    <!-- Sub-Group -->
+    <div class="filter-wrap" id="fw-subgroup">
+      <button class="filter-btn" id="fb-subgroup" onclick="toggleDD('subgroup')">
+        <i class="ti ti-tag" style="font-size:13px"></i><span id="fl-subgroup">All Sub-Groups</span>
+        <span class="fbadge" id="fbadge-subgroup" style="display:none"></span>
+        <i class="ti ti-chevron-down" style="font-size:11px"></i>
+      </button>
+      <div class="filter-dropdown" id="fd-subgroup">
+        <div class="fd-head"><span class="fd-head-title">Sub-Group</span>
+          <div class="fd-head-actions">
+            <button class="fd-action-btn fd-sel-all" onclick="selectAllDD('subgroup')"><i class="ti ti-check-all" style="font-size:11px"></i> All</button>
+            <button class="fd-action-btn fd-clr-all" onclick="clearDD('subgroup')"><i class="ti ti-x" style="font-size:11px"></i> None</button>
+          </div>
+        </div>
+        <div class="fd-search"><input type="text" id="fs-subgroup" placeholder="Search sub-group…" oninput="searchDD('subgroup')"></div>
+        <div class="fd-list" id="flist-subgroup"></div>
+        <div class="fd-foot"><button class="fd-cancel" onclick="cancelDD('subgroup')">Cancel</button><button class="fd-ok" onclick="applyDD('subgroup')"><i class="ti ti-check" style="font-size:11px"></i> Apply</button></div>
+      </div>
+    </div>
+    <!-- Customer -->
+    <div class="filter-wrap" id="fw-customer">
+      <button class="filter-btn" id="fb-customer" onclick="toggleDD('customer')">
+        <i class="ti ti-user" style="font-size:13px"></i><span id="fl-customer">All Customers</span>
+        <span class="fbadge" id="fbadge-customer" style="display:none"></span>
+        <i class="ti ti-chevron-down" style="font-size:11px"></i>
+      </button>
+      <div class="filter-dropdown" id="fd-customer">
+        <div class="fd-head"><span class="fd-head-title">Customer Name</span>
+          <div class="fd-head-actions">
+            <button class="fd-action-btn fd-sel-all" onclick="selectAllDD('customer')"><i class="ti ti-check-all" style="font-size:11px"></i> All</button>
+            <button class="fd-action-btn fd-clr-all" onclick="clearDD('customer')"><i class="ti ti-x" style="font-size:11px"></i> None</button>
+          </div>
+        </div>
+        <div class="fd-search"><input type="text" id="fs-customer" placeholder="Search customer…" oninput="searchDD('customer')"></div>
+        <div class="fd-list" id="flist-customer"></div>
+        <div class="fd-foot"><button class="fd-cancel" onclick="cancelDD('customer')">Cancel</button><button class="fd-ok" onclick="applyDD('customer')"><i class="ti ti-check" style="font-size:11px"></i> Apply</button></div>
+      </div>
+    </div>
+    <!-- Active SBU pills (multi-select) -->
+    <div id="sbu-pills-wrap" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"></div>
+  </div>
+
+  <!-- DETAIL PAGE -->
+  <div id="detail-page">
+    <!-- Biz Tabs -->
+    <div class="biz-tabs">
+      <button class="biz-tab hw-a" id="tab-HW" onclick="switchBiz('HW')">HW</button>
+      <button class="biz-tab" id="tab-ERG" onclick="switchBiz('ERG')">ERG</button>
+      <button class="biz-tab" id="tab-ST" onclick="switchBiz('ST')">ST</button>
+    </div>
+    <!-- Hero + Trend -->
+    <div class="hero-row">
+      <div class="hero-card" id="hero-card">
+        <div class="hero-lbl">DEALER OVERVIEW</div>
+        <div class="hero-stats-vert">
+          <div class="hero-stat-row"><div class="hlbl">Total DD</div><div class="hval" id="h-total">—</div></div>
+          <div class="hero-stat-row"><div class="hlbl">Total Sale (Lacs)</div><div class="hval" id="h-sale">—</div></div>
+          <div class="hero-stat-row"><div class="hlbl">YTD Active</div><div class="hval" id="h-ytd-active">—</div></div>
+          <div class="hero-stat-row"><div class="hlbl">MTD Active</div><div class="hval" id="h-mtd-active">—</div></div>
+        </div>
+      </div>
+      <div class="trend-card">
+        <div class="trend-title">Monthly Billing Trend (₹ Lacs)</div>
+        <div class="trend-wrap"><canvas id="trend-canvas" role="img" aria-label="Monthly billing trend"></canvas></div>
+      </div>
+    </div>
+    <!-- KPI Strip -->
+    <div class="kpi-strip">
+      <div class="kpi-box kc0"><div class="kb-label">YTD Billed</div><div class="kb-val" id="k-ytd-bv">—</div><div class="kb-sub">₹ Lacs</div></div>
+      <div class="kpi-box kc1"><div class="kb-label">MTD Billed</div><div class="kb-val" id="k-mtd-bv">—</div><div class="kb-sub">₹ Lacs</div></div>
+      <div class="kpi-box kc2"><div class="kb-label">YTD Active</div><div class="kb-val" id="k-ytd-a">—</div><div class="kb-sub">DD</div></div>
+      <div class="kpi-box kc3"><div class="kb-label">MTD Active</div><div class="kb-val" id="k-mtd-a">—</div><div class="kb-sub">DD</div></div>
+      <div class="kpi-box kc4"><div class="kb-label">Active %</div><div class="kb-val" id="k-act-pct">—</div><div class="kb-sub">YTD active vs total</div></div>
+    </div>
+    <!-- SBU -->
+    <div class="sbu-sec-title"><i class="ti ti-layout-grid" style="font-size:13px"></i> SBU Breakdown <span style="font-size:10px;font-weight:400;color:#D1D5DB">— click to filter, multi-select supported</span></div>
+    <div class="cat-grid" id="cat-grid"></div>
+    <!-- Region -->
+    <div class="region-row" id="region-row"></div>
+  </div>
+
+  <!-- SUMMARY PAGE -->
+  <div id="summary-page">
+    <div class="summary-header"><i class="ti ti-table" style="font-size:14px"></i> All Business Summary</div>
+
+    <!-- 3 biz overview cards -->
+    <div class="summary-grid" id="sum-overview-cards"></div>
+
+    <!-- Trend charts side by side -->
+    <div class="sum-trend-row" id="sum-trend-row"></div>
+
+    <!-- Full data table -->
+    <div class="summary-header" style="margin-top:.5rem"><i class="ti ti-list" style="font-size:14px"></i> Monthly Detail Table</div>
+    <div class="sum-table-wrap">
+      <table class="sum-table">
+        <thead>
+          <tr>
+            <th>Business</th>
+            <th>Month</th>
+            <th>Billed (₹ Lacs)</th>
+            <th>Active DD</th>
+            <th>YTD Billed</th>
+            <th>YTD Active</th>
+          </tr>
+        </thead>
+        <tbody id="sum-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /dash -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ── STATE ─────────────────────────────────────────────────────────
+let RAW=[], BIZ='HW', ACTIVE_FY='', ALL_FYS=[];
+let trendChart=null;
+let stateChart=null;
+const sumCharts={};
+const MONTH_ORDER=['April','May','June','July','August','September','October','November','December','January','February','March'];
+const BIZ_CFG={
+  HW: {hero:'linear-gradient(135deg,#1D4ED8,#2563EB)',tab:'hw-a',acc:'#2563EB',line:'#60A5FA',sumCard:'linear-gradient(135deg,#1D4ED8,#3B82F6)'},
+  ERG:{hero:'linear-gradient(135deg,#065F46,#059669)',tab:'erg-a',acc:'#059669',line:'#34D399',sumCard:'linear-gradient(135deg,#065F46,#10B981)'},
+  ST: {hero:'linear-gradient(135deg,#5B21B6,#7C3AED)',tab:'st-a', acc:'#7C3AED',line:'#A78BFA',sumCard:'linear-gradient(135deg,#5B21B6,#8B5CF6)'}
+};
+const CAT_GRAD=['linear-gradient(135deg,#F59E0B,#F97316)','linear-gradient(135deg,#2563EB,#06B6D4)','linear-gradient(135deg,#0D9488,#059669)','linear-gradient(135deg,#7C3AED,#9333EA)','linear-gradient(135deg,#DC2626,#E11D48)','linear-gradient(135deg,#374151,#4B5563)','linear-gradient(135deg,#B45309,#D97706)','linear-gradient(135deg,#0E7490,#0284C7)'];
+const CAT_ICONS=['🏷️','🖥️','🤝','🎁','🎀','📦','🔑','🪟'];
+const FS={month:{all:[],pend:[],act:[]},state:{all:[],pend:[],act:[]},subgroup:{all:[],pend:[],act:[]},customer:{all:[],pend:[],act:[]}};
+let ACT_SBU=new Set(); // multi-select set of SBU names
+let CURRENT_PAGE='detail';
+
+// ── SHAREPOINT AUTO-FETCH ────────────────────────────────────────────────────
+const SHAREPOINT_URL = 'https://ozoneoverseas-my.sharepoint.com/:x:/g/personal/sagar_v_ozone-india_in/IQDFJdOJbYiCQZWo86h4-ouQAV3qPn3haO9RzCEv7BZXh2Q?e=mYxhP3&download=1';
+
+async function autoFetchFromSharePoint() {
+  try {
+    const response = await fetch(SHAREPOINT_URL);
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const arrayBuffer = await response.arrayBuffer();
+    processArrayBuffer(arrayBuffer);
+  } catch(err) {
+    console.warn('Auto-fetch failed:', err.message);
+    document.getElementById('up-spinner').style.display='none';
+    document.getElementById('up-icon-el').innerHTML='<i class="ti ti-alert-triangle" style="color:#F59E0B;font-size:40px"></i>';
+    document.getElementById('up-title-el').textContent='Could not auto-load data';
+    document.getElementById('up-sub-el').textContent='SharePoint link requires sign-in. Upload the file manually below.';
+    document.getElementById('manual-fallback').style.display='block';
+  }
+}
+
+function processArrayBuffer(arrayBuffer) {
+  try {
+    const wb = XLSX.read(arrayBuffer, {type:'array', cellDates:true});
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:''});
+    if(!rows.length) throw new Error('File is empty');
+    if(!('Business' in rows[0])||!('BV' in rows[0])||!('Months' in rows[0])||!('Customer Code' in rows[0]))
+      throw new Error('Missing required columns');
+    initDashboard(rows);
+  } catch(err) {
+    document.getElementById('up-spinner').style.display='none';
+    document.getElementById('manual-fallback').style.display='block';
+    showErr('Error: ' + err.message);
+  }
+}
+
+function initDashboard(rows) {
+  RAW=rows;
+  ALL_FYS=[...new Set(rows.map(r=>r['FY']||'').filter(Boolean))].sort();
+  ACTIVE_FY=ALL_FYS[ALL_FYS.length-1];
+  initFilters(); buildFYTabs();
+  document.getElementById('upload-screen').style.display='none';
+  document.getElementById('dash').style.display='block';
+  setPage('detail'); switchBiz('HW');
+}
+
+window.addEventListener('DOMContentLoaded', () => { autoFetchFromSharePoint(); });
+
+// ── FILE LOAD ─────────────────────────────────────────────────────
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files[0])load(e.dataTransfer.files[0])});
+document.getElementById('file-input').addEventListener('change',e=>{if(e.target.files[0])load(e.target.files[0])});
+function showErr(m){const el=document.getElementById('err');el.textContent=m;el.style.display='block'}
+function load(file){
+  if(!file.name.match(/\.xlsx?$/i)){showErr('Please upload an .xlsx file');return}
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+      if(!rows.length){showErr('File is empty');return}
+      if(!('Business' in rows[0])||!('BV' in rows[0])||!('Months' in rows[0])||!('Customer Code' in rows[0])){showErr('Missing required columns');return}
+      initDashboard(rows);
+    }catch(err){showErr('Error: '+err.message)}
+  };
+  r.readAsArrayBuffer(file);
+}
+
+// ── PAGE SWITCH ───────────────────────────────────────────────────
+function setPage(pg){
+  CURRENT_PAGE=pg;
+  document.getElementById('detail-page').style.display=pg==='detail'?'block':'none';
+  document.getElementById('summary-page').style.display=pg==='summary'?'block':'none';
+  document.querySelectorAll('.page-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('ptab-'+pg).classList.add('active');
+  if(pg==='summary')renderSummary();
+}
+
+// ── FY TABS ───────────────────────────────────────────────────────
+function buildFYTabs(){
+  document.getElementById('fy-tabs').innerHTML=ALL_FYS.map(fy=>`<button class="fy-tab${fy===ACTIVE_FY?' active':''}" onclick="setFY('${fy}')">${fy}</button>`).join('');
+}
+function setFY(fy){
+  ACTIVE_FY=fy;
+  document.querySelectorAll('.fy-tab').forEach(t=>t.classList.toggle('active',t.textContent===fy));
+  ACT_SBU=new Set();renderSBUPills();
+  initFilters();
+  if(CURRENT_PAGE==='detail')renderDetail();
+  else renderSummary();
+}
+
+// ── FILTER INIT ───────────────────────────────────────────────────
+function initFilters(keepApplied){
+  const fyRows=RAW.filter(r=>r['FY']===ACTIVE_FY);
+  const mSet=new Set(fyRows.map(r=>r['Months']||'').filter(Boolean));
+  FS.month.all=MONTH_ORDER.filter(m=>mSet.has(m));
+  FS.state.all=[...new Set(fyRows.map(r=>r['Customer State']||'').filter(Boolean))].sort();
+  FS.subgroup.all=getSGForBiz(BIZ,ACTIVE_FY);
+  const bizFy=fyRows.filter(r=>r['Business']===BIZ);
+  FS.customer.all=[...new Set(bizFy.map(r=>r['Customer Name']||'').filter(Boolean))].sort();
+  if(!keepApplied){
+    Object.keys(FS).forEach(k=>{FS[k].act=[...FS[k].all];FS[k].pend=[...FS[k].all]});
+    ACT_SBU=new Set();renderSBUPills();
+  } else {
+    Object.keys(FS).forEach(k=>{
+      FS[k].act=FS[k].act.filter(v=>FS[k].all.includes(v));
+      if(!FS[k].act.length)FS[k].act=[...FS[k].all];
+      FS[k].pend=[...FS[k].act];
+    });
+  }
+  Object.keys(FS).forEach(k=>{buildDD_list(k);updateDDBadge(k)});
+}
+function getSGForBiz(biz,fy){
+  return[...new Set(RAW.filter(r=>r['Business']===biz&&r['FY']===fy).map(r=>r['Sub- Group']||'').filter(Boolean))].sort();
+}
+
+// ── BIZ TABS ──────────────────────────────────────────────────────
+function switchBiz(biz){
+  BIZ=biz;
+  document.querySelectorAll('.biz-tab').forEach(t=>{t.className='biz-tab'});
+  document.getElementById('tab-'+biz).className='biz-tab '+BIZ_CFG[biz].tab;
+  FS.subgroup.all=getSGForBiz(BIZ,ACTIVE_FY);
+  FS.subgroup.act=[...FS.subgroup.all];FS.subgroup.pend=[...FS.subgroup.all];
+  const bizFy=RAW.filter(r=>r['FY']===ACTIVE_FY&&r['Business']===biz);
+  FS.customer.all=[...new Set(bizFy.map(r=>r['Customer Name']||'').filter(Boolean))].sort();
+  FS.customer.act=[...FS.customer.all];FS.customer.pend=[...FS.customer.all];
+  buildDD_list('subgroup');updateDDBadge('subgroup');
+  buildDD_list('customer');updateDDBadge('customer');
+  ACT_SBU=new Set();renderSBUPills();
+  renderDetail();
+}
+
+// ── ANALYSIS ─────────────────────────────────────────────────────
+// BV column is already in Lacs — NO *100 multiplication
+function getFilteredRows(biz){
+  const b=biz||BIZ;
+  let rows=RAW.filter(r=>r['FY']===ACTIVE_FY&&r['Business']===b);
+  if(FS.month.act.length<FS.month.all.length) rows=rows.filter(r=>FS.month.act.includes(r['Months']||''));
+  if(FS.state.act.length<FS.state.all.length) rows=rows.filter(r=>FS.state.act.includes(r['Customer State']||''));
+  // subgroup/customer filters only applied when viewing that biz
+  if(b===BIZ){
+    if(FS.subgroup.act.length<FS.subgroup.all.length) rows=rows.filter(r=>FS.subgroup.act.includes(r['Sub- Group']||''));
+    if(FS.customer.act.length<FS.customer.all.length) rows=rows.filter(r=>FS.customer.act.includes(r['Customer Name']||''));
+    if(ACT_SBU.size>0) rows=rows.filter(r=>ACT_SBU.has(r['SBU']||''));
+  }
+  return rows;
+}
+
+function getMTD(rows){
+  const months=[...new Set(rows.map(r=>r['Months']||'').filter(Boolean))];
+  const s=MONTH_ORDER.filter(m=>months.includes(m));
+  return s[s.length-1]||'';
+}
+
+function analyseFor(biz){
+  const rows=getFilteredRows(biz);
+  const mtdM=getMTD(rows);
+  const mtdRows=rows.filter(r=>r['Months']===mtdM);
+  const bvSum=a=>a.reduce((s,r)=>s+(parseFloat(r['BV'])||0),0);
+  const uniq=a=>[...new Set(a.map(r=>r['Customer Code']).filter(Boolean))].length;
+
+  // Total dealers: all time for this biz, scoped by state/customer if filtered
+  let totalBase=RAW.filter(r=>r['Business']===biz);
+  if(FS.state.act.length<FS.state.all.length) totalBase=totalBase.filter(r=>FS.state.act.includes(r['Customer State']||''));
+  if(biz===BIZ&&FS.customer.act.length<FS.customer.all.length) totalBase=totalBase.filter(r=>FS.customer.act.includes(r['Customer Name']||''));
+  const totalDealers=[...new Set(totalBase.map(r=>r['Customer Code']).filter(Boolean))].length;
+
+  const ytdBV=parseFloat(bvSum(rows).toFixed(4));
+  const mtdBV=parseFloat(bvSum(mtdRows).toFixed(4));
+  const ytdActive=uniq(rows);
+  const mtdActive=uniq(mtdRows);
+
+  const usedMonths=(FS.month.act.length<FS.month.all.length?FS.month.act:MONTH_ORDER).filter(m=>[...new Set(rows.map(r=>r['Months']||''))].includes(m));
+  const monthTrend=usedMonths.map(m=>{
+    const mr=rows.filter(r=>r['Months']===m);
+    return{month:m,bv:parseFloat(bvSum(mr).toFixed(4)),active:uniq(mr)};
+  });
+
+  // SBU
+  const sbuMap={};
+  rows.forEach(r=>{
+    const sbu=r['SBU']||'Other';
+    if(biz==='ERG'&&sbu==='Smart Lock')return;
+    if(!sbuMap[sbu])sbuMap[sbu]={bv:0,dealers:new Set()};
+    sbuMap[sbu].bv+=parseFloat(r['BV'])||0;
+    if(r['Customer Code'])sbuMap[sbu].dealers.add(r['Customer Code']);
+  });
+  const sbus=Object.entries(sbuMap).sort((a,b)=>b[1].bv-a[1].bv).map(([name,d])=>({name,bv:parseFloat(d.bv.toFixed(4)),dealers:d.dealers.size}));
+  const sbuTotal=sbus.reduce((s,c)=>s+c.bv,0);
+
+  // Region
+  const regMap={};
+  rows.forEach(r=>{
+    const reg=r['Region']||'Other';
+    if(!regMap[reg])regMap[reg]={bv:0,dealers:new Set()};
+    regMap[reg].bv+=parseFloat(r['BV'])||0;
+    if(r['Customer Code'])regMap[reg].dealers.add(r['Customer Code']);
+  });
+  const regions=Object.entries(regMap).map(([n,d])=>({name:n,bv:parseFloat(d.bv.toFixed(4)),active:d.dealers.size})).sort((a,b)=>b.bv-a.bv);
+
+  // State level
+  const stateMap={};
+  rows.forEach(r=>{
+    const st2=r['Customer State']||'Other';
+    if(!stateMap[st2])stateMap[st2]={bv:0,dealers:new Set()};
+    stateMap[st2].bv+=parseFloat(r['BV'])||0;
+    if(r['Customer Code'])stateMap[st2].dealers.add(r['Customer Code']);
+  });
+  const states=Object.entries(stateMap).map(([n,d])=>({name:n,bv:parseFloat(d.bv.toFixed(4)),dd:d.dealers.size})).sort((a,b)=>b.bv-a.bv);
+
+  return{mtdMonth:mtdM,totalDealers,ytdBV,mtdBV,ytdActive,mtdActive,monthTrend,sbus,sbuTotal,regions,states};
+}
+
+// ── FORMAT ────────────────────────────────────────────────────────
+// BV already in Lacs — display as-is with 2 decimal places
+function fmt(n){return n.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fmtInt(n){return n.toLocaleString('en-IN',{maximumFractionDigits:0})}
+
+// ── RENDER DETAIL ─────────────────────────────────────────────────
+function renderDetail(){
+  const d=analyseFor(BIZ);
+  const cfg=BIZ_CFG[BIZ];
+
+  document.getElementById('fy-badge').textContent=ACTIVE_FY;
+  document.getElementById('mtd-badge').textContent='MTD: '+(d.mtdMonth||'—');
+  document.getElementById('hero-card').style.background=cfg.hero;
+  document.getElementById('h-total').textContent=fmtInt(d.totalDealers);
+  document.getElementById('h-sale').textContent=fmt(d.ytdBV);
+  document.getElementById('h-ytd-active').textContent=fmtInt(d.ytdActive);
+  document.getElementById('h-mtd-active').textContent=fmtInt(d.mtdActive);
+
+  // Trend
+  if(trendChart){trendChart.destroy();trendChart=null}
+  const labels=d.monthTrend.map(m=>m.month.slice(0,3));
+  const values=d.monthTrend.map(m=>m.bv);
+  trendChart=new Chart(document.getElementById('trend-canvas'),{
+    type:'line',
+    data:{labels,datasets:[{label:'₹ Lacs',data:values,borderColor:cfg.line,backgroundColor:cfg.line+'22',fill:true,tension:0.42,pointRadius:5,pointBackgroundColor:cfg.line,pointBorderColor:'#fff',pointBorderWidth:2.5,borderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+' L'}}},
+      scales:{x:{ticks:{font:{size:11},autoSkip:false},grid:{display:false}},y:{display:false,grid:{display:false}}},
+      layout:{padding:{top:28}}},
+    plugins:[{id:'dls',afterDatasetsDraw(chart){
+      const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);const ds=chart.data.datasets[0];
+      ctx.save();ctx.font='700 10px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillStyle=cfg.acc;
+      meta.data.forEach((pt,i)=>{ctx.fillText('₹'+fmt(ds.data[i]),pt.x,pt.y-12)});ctx.restore();
+    }}]
+  });
+
+  // KPI
+  document.getElementById('k-ytd-bv').textContent=fmt(d.ytdBV);
+  document.getElementById('k-mtd-bv').textContent=fmt(d.mtdBV);
+  document.getElementById('k-ytd-a').textContent=fmtInt(d.ytdActive);
+  document.getElementById('k-mtd-a').textContent=fmtInt(d.mtdActive);
+  const pct=d.totalDealers>0?Math.round(d.ytdActive/d.totalDealers*100):0;
+  document.getElementById('k-act-pct').textContent=pct+'%';
+
+  // SBU — always show ALL sbus for this biz (ignoring SBU filter) so cards never disappear
+  // Compute unfiltered sbu totals for display, but keep KPI/region filtered
+  let allBizRows=RAW.filter(r=>r['FY']===ACTIVE_FY&&r['Business']===BIZ);
+  if(FS.month.act.length<FS.month.all.length) allBizRows=allBizRows.filter(r=>FS.month.act.includes(r['Months']||''));
+  if(FS.state.act.length<FS.state.all.length) allBizRows=allBizRows.filter(r=>FS.state.act.includes(r['Customer State']||''));
+  if(FS.subgroup.act.length<FS.subgroup.all.length) allBizRows=allBizRows.filter(r=>FS.subgroup.act.includes(r['Sub- Group']||''));
+  if(FS.customer.act.length<FS.customer.all.length) allBizRows=allBizRows.filter(r=>FS.customer.act.includes(r['Customer Name']||''));
+  // no ACT_SBU filter here — always all cards
+  const allSbuMap={};
+  allBizRows.forEach(r=>{
+    const sbu=r['SBU']||'Other';
+    if(BIZ==='ERG'&&sbu==='Smart Lock')return;
+    if(!allSbuMap[sbu])allSbuMap[sbu]={bv:0,dealers:new Set()};
+    allSbuMap[sbu].bv+=parseFloat(r['BV'])||0;
+    if(r['Customer Code'])allSbuMap[sbu].dealers.add(r['Customer Code']);
+  });
+  const allSbus=Object.entries(allSbuMap).sort((a,b)=>b[1].bv-a[1].bv).map(([name,d2])=>({name,bv:parseFloat(d2.bv.toFixed(4)),dealers:d2.dealers.size}));
+  const allSbuTotal=allSbus.reduce((s,c)=>s+c.bv,0)||1;
+
+  const grid = document.getElementById('cat-grid');
+  grid.innerHTML=allSbus.length
+    ?allSbus.map((s,i)=>{
+        const p=Math.round(s.bv/allSbuTotal*100);const sel=ACT_SBU.has(s.name);
+        return`<div class="cat-card${sel?' sel':''}" style="background:${CAT_GRAD[i%CAT_GRAD.length]}" onclick="toggleSBU('${s.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">
+          <div class="cc-c1"></div><div class="cc-c2"></div>
+          ${sel?'<div style="position:absolute;top:12px;right:12px;z-index:2;background:rgba(255,255,255,.25);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:14px;color:#fff"></i></div>':''}
+          <span class="cc-icon">${CAT_ICONS[i%CAT_ICONS.length]}</span>
+          <div class="cc-name">${s.name.toUpperCase().slice(0,28)}</div>
+          <div class="cc-val">₹${fmt(s.bv)}</div>
+          <div class="cc-pct">${p}% of total · ${s.dealers} DD</div>
+          <div class="cc-prog"><div class="cc-fill" style="width:${p}%"></div></div>
+        </div>`}).join('')
+    :'<div class="no-data">No SBU data</div>';
+  grid.classList.toggle('has-sel', ACT_SBU.size>0);
+
+  // Region — merged panel + state chart
+  const mxB=Math.max(...d.regions.map(r=>r.bv),1);
+  document.getElementById('region-row').innerHTML=d.regions.length?`
+    <div class="rpanel">
+      <div class="rp-title">Billing by Region</div>
+      ${d.regions.map(r=>`<div class="rp-item">
+        <span class="rp-name">${r.name}</span>
+        <div class="rp-track"><div class="rp-fill" style="width:${Math.round(r.bv/mxB*100)}%;background:${cfg.acc}"></div></div>
+        <span class="rp-val">₹${fmt(r.bv)} <span style="font-size:10px;opacity:.6;font-weight:500">(${fmtInt(r.active)} DD)</span></span>
+      </div>`).join('')}
+    </div>
+    <div class="rpanel" id="state-chart-panel">
+      <div class="rp-title">Sale by State</div>
+      <div style="position:relative;height:${Math.max(d.states.length*36+20,120)}px">
+        <canvas id="state-chart-canvas" role="img" aria-label="Sale by state"></canvas>
+      </div>
+    </div>`:'<div class="no-data">No region data</div>';
+
+  // State horizontal bar chart
+  if(stateChart){stateChart.destroy();stateChart=null}
+  if(d.states.length){
+    setTimeout(()=>{
+      const canvas=document.getElementById('state-chart-canvas');
+      if(!canvas)return;
+      stateChart=new Chart(canvas,{
+        type:'bar',
+        data:{
+          labels:d.states.map(s=>s.name),
+          datasets:[{
+            label:'Sale',
+            data:d.states.map(s=>s.bv),
+            backgroundColor:cfg.acc+'CC',
+            borderRadius:5,
+            borderSkipped:false
+          }]
+        },
+        options:{
+          indexAxis:'y',
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{
+            legend:{display:false},
+            tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+' L  |  '+d.states[v.dataIndex].dd+' DD'}}
+          },
+          scales:{
+            x:{display:false,grid:{display:false}},
+            y:{ticks:{font:{size:11},color:'#6B7280'},grid:{display:false},border:{display:false}}
+          },
+          layout:{padding:{right:120}}
+        },
+        plugins:[{
+          id:'stateLabels',
+          afterDatasetsDraw(chart){
+            const ctx=chart.ctx;
+            const meta=chart.getDatasetMeta(0);
+            ctx.save();
+            meta.data.forEach((bar,i)=>{
+              const s=d.states[i];
+              const x=bar.x+8;
+              const y=bar.y;
+              ctx.font='700 11px -apple-system,sans-serif';
+              ctx.fillStyle=cfg.acc;
+              ctx.textAlign='left';
+              ctx.textBaseline='middle';
+              ctx.fillText('₹'+fmt(s.bv),x,y-5);
+              ctx.font='500 10px -apple-system,sans-serif';
+              ctx.fillStyle='#9CA3AF';
+              ctx.fillText(s.dd+' DD',x,y+7);
+            });
+            ctx.restore();
+          }
+        }]
+      });
+    },60);
+  }
+
+  updateClearAllBtn();
+}
+
+// ── RENDER SUMMARY ────────────────────────────────────────────────
+function renderSummary(){
+  document.getElementById('fy-badge').textContent=ACTIVE_FY;
+  const allBiz=['HW','ERG','ST'];
+
+  // Overview cards
+  document.getElementById('sum-overview-cards').innerHTML=allBiz.map(biz=>{
+    const d=analyseFor(biz);
+    const cfg=BIZ_CFG[biz];
+    const pct=d.totalDealers>0?Math.round(d.ytdActive/d.totalDealers*100):0;
+    return`<div class="sum-card" style="background:${cfg.sumCard}">
+      <div class="sum-card-title">${biz} — ${ACTIVE_FY}</div>
+      <div class="sum-stat"><span class="sum-stat-lbl">Total DD</span><span class="sum-stat-val">${fmtInt(d.totalDealers)}</span></div>
+      <div class="sum-stat"><span class="sum-stat-lbl">YTD Billed (₹ L)</span><span class="sum-stat-val">${fmt(d.ytdBV)}</span></div>
+      <div class="sum-stat"><span class="sum-stat-lbl">MTD Billed (₹ L)</span><span class="sum-stat-val">${fmt(d.mtdBV)}</span></div>
+      <div class="sum-stat"><span class="sum-stat-lbl">YTD Active</span><span class="sum-stat-val">${fmtInt(d.ytdActive)}</span></div>
+      <div class="sum-stat"><span class="sum-stat-lbl">MTD Active</span><span class="sum-stat-val">${fmtInt(d.mtdActive)}</span></div>
+      <div class="sum-stat"><span class="sum-stat-lbl">Active %</span><span class="sum-stat-val">${pct}%</span></div>
+    </div>`;
+  }).join('');
+
+  // Trend charts
+  Object.values(sumCharts).forEach(c=>{try{c.destroy()}catch(e){}});
+  document.getElementById('sum-trend-row').innerHTML=allBiz.map(biz=>`
+    <div class="sum-trend-card">
+      <div class="sum-trend-title" style="color:${BIZ_CFG[biz].acc}">${biz} — Monthly Billing (₹ Lacs)</div>
+      <div class="sum-trend-wrap"><canvas id="sc-${biz}" role="img" aria-label="${biz} trend"></canvas></div>
+    </div>`).join('');
+  // render after DOM update
+  setTimeout(()=>{
+    allBiz.forEach(biz=>{
+      const d=analyseFor(biz);
+      const cfg=BIZ_CFG[biz];
+      const labels=d.monthTrend.map(m=>m.month.slice(0,3));
+      const values=d.monthTrend.map(m=>m.bv);
+      sumCharts[biz]=new Chart(document.getElementById('sc-'+biz),{
+        type:'line',
+        data:{labels,datasets:[{label:'₹ L',data:values,borderColor:cfg.line,backgroundColor:cfg.line+'22',fill:true,tension:0.42,pointRadius:4,pointBackgroundColor:cfg.line,pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:2.5}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+'L'}}},
+          scales:{x:{ticks:{font:{size:10},autoSkip:false},grid:{display:false}},y:{display:false,grid:{display:false}}},
+          layout:{padding:{top:22}}},
+        plugins:[{id:'dls2',afterDatasetsDraw(chart){
+          const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);const ds=chart.data.datasets[0];
+          ctx.save();ctx.font='700 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillStyle=cfg.acc;
+          meta.data.forEach((pt,i)=>{ctx.fillText('₹'+fmt(ds.data[i]),pt.x,pt.y-10)});ctx.restore();
+        }}]
+      });
+    });
+  },50);
+
+  // Table: all months × all biz
+  const allRows=[];
+  allBiz.forEach(biz=>{
+    const d=analyseFor(biz);
+    let ytdRunBV=0,ytdRunA=new Set();
+    d.monthTrend.forEach(m=>{
+      ytdRunBV+=m.bv;
+      // for ytd active per row we use cumulative unique from filtered rows
+      const mRows=getFilteredRows(biz).filter(r=>r['Months']===m.month);
+      mRows.forEach(r=>{if(r['Customer Code'])ytdRunA.add(r['Customer Code'])});
+      allRows.push({biz,month:m.month,bv:m.bv,active:m.active,ytdBV:ytdRunBV,ytdActive:ytdRunA.size});
+    });
+  });
+  document.getElementById('sum-table-body').innerHTML=allRows.map(r=>`
+    <tr>
+      <td><span class="sum-biz-badge biz-${r.biz.toLowerCase()}">${r.biz}</span></td>
+      <td>${r.month}</td>
+      <td>₹${fmt(r.bv)}</td>
+      <td>${fmtInt(r.active)}</td>
+      <td>₹${fmt(r.ytdBV)}</td>
+      <td>${fmtInt(r.ytdActive)}</td>
+    </tr>`).join('');
+}
+
+// ── SBU CARD FILTER ───────────────────────────────────────────────
+function toggleSBU(name){
+  if(ACT_SBU.has(name)){ACT_SBU.delete(name)}
+  else{ACT_SBU.add(name)}
+  renderSBUPills();
+  renderDetail();
+}
+function clearSBU(){
+  ACT_SBU=new Set();renderSBUPills();renderDetail();
+}
+function removeSBU(name){
+  ACT_SBU.delete(name);renderSBUPills();renderDetail();
+}
+function renderSBUPills(){
+  const wrap=document.getElementById('sbu-pills-wrap');
+  if(ACT_SBU.size===0){wrap.innerHTML='';return}
+  wrap.innerHTML=[...ACT_SBU].map(name=>`
+    <span class="sbu-pill">
+      <i class="ti ti-layout-grid" style="font-size:12px"></i>
+      <span>${name}</span>
+      <i class="ti ti-x" style="font-size:11px;cursor:pointer" onclick="removeSBU('${name.replace(/'/g,"\\'")}')"></i>
+    </span>`).join('')
+    +(ACT_SBU.size>1?`<span class="sbu-pill" style="background:#EF4444" onclick="clearSBU()"><i class="ti ti-x" style="font-size:11px"></i> Clear all</span>`:'');
+}
+
+// ── DROPDOWN SYSTEM ───────────────────────────────────────────────
+function buildDD_list(key,query){
+  const all=FS[key].all;const pend=FS[key].pend;
+  const q=(query||'').toLowerCase();
+  const filtered=all.filter(s=>!q||s.toLowerCase().includes(q));
+  const el=document.getElementById('flist-'+key);
+  el.innerHTML=filtered.length
+    ?filtered.map(s=>`<label class="fd-item"><input type="checkbox" value="${s.replace(/"/g,'&quot;')}" ${pend.includes(s)?'checked':''} onchange="toggleItem('${key}','${s.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}',this.checked)">${s}</label>`).join('')
+    :'<div style="padding:10px 13px;color:#9CA3AF;font-size:12px">No results</div>';
+}
+function toggleItem(key,val,checked){
+  let p=[...FS[key].pend];
+  if(checked){if(!p.includes(val))p.push(val)}else{p=p.filter(s=>s!==val)}
+  FS[key].pend=p;
+}
+const DD_LABELS={month:['All Months','month'],state:['All States','state'],subgroup:['All Sub-Groups','sub-group'],customer:['All Customers','customer']};
+function updateDDBadge(key){
+  const all=FS[key].all,act=FS[key].act;
+  const badge=document.getElementById('fbadge-'+key);
+  const label=document.getElementById('fl-'+key);
+  const btn=document.getElementById('fb-'+key);
+  const [allLbl,sing]=DD_LABELS[key];
+  if(act.length===all.length||act.length===0){badge.style.display='none';label.textContent=allLbl;btn.classList.remove('active-filter')}
+  else{badge.style.display='inline';badge.textContent=act.length;label.textContent=act.length===1?act[0]:act.length+' '+sing+'s';btn.classList.add('active-filter')}
+}
+function toggleDD(key){
+  FS[key].pend=[...FS[key].act];buildDD_list(key);
+  const dd=document.getElementById('fd-'+key);
+  const wasOpen=dd.classList.contains('open');
+  document.querySelectorAll('.filter-dropdown').forEach(d=>d.classList.remove('open'));
+  if(!wasOpen)dd.classList.add('open');
+}
+function selectAllDD(key){FS[key].pend=[...FS[key].all];buildDD_list(key,document.getElementById('fs-'+key).value)}
+function clearDD(key){FS[key].pend=[];buildDD_list(key,document.getElementById('fs-'+key).value)}
+function cancelDD(key){FS[key].pend=[...FS[key].act];document.getElementById('fd-'+key).classList.remove('open');document.getElementById('fs-'+key).value=''}
+function applyDD(key){
+  FS[key].act=FS[key].pend.length?[...FS[key].pend]:[...FS[key].all];
+  document.getElementById('fd-'+key).classList.remove('open');
+  document.getElementById('fs-'+key).value='';
+  updateDDBadge(key);
+  if(CURRENT_PAGE==='detail')renderDetail();else renderSummary();
+}
+function searchDD(key){buildDD_list(key,document.getElementById('fs-'+key).value)}
+
+function isAnyFilterActive(){return Object.keys(FS).some(k=>FS[k].act.length<FS[k].all.length)||ACT_SBU.size>0}
+function updateClearAllBtn(){document.getElementById('clear-all-btn').style.display=isAnyFilterActive()?'flex':'none'}
+function clearAllFilters(){
+  Object.keys(FS).forEach(k=>{FS[k].act=[...FS[k].all];FS[k].pend=[...FS[k].all]});
+  Object.keys(FS).forEach(k=>updateDDBadge(k));
+  ACT_SBU=new Set();renderSBUPills();renderDetail();
+}
+
+document.addEventListener('click',e=>{
+  ['month','state','subgroup','customer'].forEach(key=>{
+    const fw=document.getElementById('fw-'+key);
+    if(fw&&!fw.contains(e.target))document.getElementById('fd-'+key).classList.remove('open');
+  });
+});
+
+function resetApp(){
+  document.getElementById('dash').style.display='none';
+  document.getElementById('upload-screen').style.display='flex';
+  document.getElementById('file-input').value='';
+  RAW=[];ACT_SBU=new Set();if(stateChart){stateChart.destroy();stateChart=null}
+  if(trendChart){trendChart.destroy();trendChart=null}
+  Object.values(sumCharts).forEach(c=>{try{c.destroy()}catch(e){}});
+}
+</script>
+</body>
+</html>
