@@ -499,12 +499,12 @@ function initDashboard(rows,updatedAt){
   RAW=rows;
   ALL_FYS=[...new Set(rows.map(r=>r['FY']||'').filter(Boolean))].sort();
   ACTIVE_FY=ALL_FYS[ALL_FYS.length-1];
+  CURRENT_BIZ='ALL'; // set BEFORE initFilters so subgroup/customer load all values
   initFilters();buildFYTabs();
   document.getElementById('upload-screen').style.display='none';
   document.getElementById('dash').style.display='block';
   const pill=document.getElementById('last-updated-pill');
   if(pill&&updatedAt){pill.textContent='Updated: '+updatedAt;pill.style.display='inline'}
-  CURRENT_BIZ='ALL';
   setPage('detail');
 }
 function resetApp(){
