@@ -844,6 +844,7 @@ function switchBiz(biz){
   buildDD_list('subgroup');updateDDBadge('subgroup');
   buildDD_list('customer');updateDDBadge('customer');
   renderVTabs();
+  renderOverviewAndTrend(); // refresh donut + trend for new biz
   renderContent();
   updateClearAllBtn();
 }
