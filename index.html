@@ -459,33 +459,55 @@ function sumFocus(biz){
 }
 
 
-function chartFocus(which){
-  // Remove existing overlay
-  var existing=document.getElementById('chart-focus-overlay');
-  if(existing){existing.remove();if(CHARTS[which+'_focus']){try{CHARTS[which+'_focus'].destroy();}catch(e){}}return;}
 
+function chartFocus(which){
+  var existing=document.getElementById('chart-focus-overlay');
+  if(existing){
+    existing.remove();
+    if(CHARTS[which+'_focus']){try{CHARTS[which+'_focus'].destroy();}catch(e){}}
+    return;
+  }
+  var title=which==='trend'?'Monthly Billing Trend (₹ Lacs)':'Sale by State (₹ Lacs)';
   var overlay=document.createElement('div');
   overlay.className='chart-focused-overlay';
   overlay.id='chart-focus-overlay';
-  overlay.onclick=function(e){if(e.target===overlay)chartFocus(which);};
+  overlay.addEventListener('click',function(e){if(e.target===overlay)chartFocus(which);});
 
-  var title=which==='trend'?'Monthly Billing Trend (₹ Lacs)':'Sale by State (₹ Lacs)';
-  overlay.innerHTML='<div class="chart-focused-box">'
-    +'<div class="chart-focused-header">'
-    +'<span class="chart-focused-title">'+title+'</span>'
-    +'<button class="chart-focused-close" onclick="chartFocus(''+which+'')">✕ Close</button>'
-    +'</div>'
-    +'<div class="chart-focused-wrap"><canvas id="focus-canvas-'+which+'"></canvas></div>'
-    +'</div>';
+  var box=document.createElement('div');
+  box.className='chart-focused-box';
+
+  var hdr=document.createElement('div');
+  hdr.className='chart-focused-header';
+
+  var ttl=document.createElement('span');
+  ttl.className='chart-focused-title';
+  ttl.textContent=title;
+
+  var btn=document.createElement('button');
+  btn.className='chart-focused-close';
+  btn.textContent='✕ Close';
+  btn.addEventListener('click',function(){chartFocus(which);});
+
+  hdr.appendChild(ttl);
+  hdr.appendChild(btn);
+
+  var wrap=document.createElement('div');
+  wrap.className='chart-focused-wrap';
+
+  var canvas=document.createElement('canvas');
+  canvas.id='focus-canvas-'+which;
+  wrap.appendChild(canvas);
+
+  box.appendChild(hdr);
+  box.appendChild(wrap);
+  overlay.appendChild(box);
   document.body.appendChild(overlay);
 
-  // Clone the chart into the focus canvas
   setTimeout(function(){
     var srcChart=CHARTS[which==='trend'?'trend-all':'state-v'];
-    var fc=document.getElementById('focus-canvas-'+which);
-    if(!fc||!srcChart)return;
+    if(!srcChart)return;
     if(CHARTS[which+'_focus'])try{CHARTS[which+'_focus'].destroy();}catch(e){}
-    CHARTS[which+'_focus']=new Chart(fc,{
+    CHARTS[which+'_focus']=new Chart(canvas,{
       type:srcChart.config.type,
       data:JSON.parse(JSON.stringify(srcChart.config.data)),
       options:Object.assign({},srcChart.config.options,{responsive:true,maintainAspectRatio:false})
@@ -547,6 +569,62 @@ function chartFocus(which){
     if(!fc||!srcChart)return;
     if(CHARTS[which+'_focus'])try{CHARTS[which+'_focus'].destroy();}catch(e){}
     CHARTS[which+'_focus']=new Chart(fc,{
+      type:srcChart.config.type,
+      data:JSON.parse(JSON.stringify(srcChart.config.data)),
+      options:Object.assign({},srcChart.config.options,{responsive:true,maintainAspectRatio:false})
+    });
+  },50);
+}
+
+
+function chartFocus(which){
+  var existing=document.getElementById('chart-focus-overlay');
+  if(existing){
+    existing.remove();
+    if(CHARTS[which+'_focus']){try{CHARTS[which+'_focus'].destroy();}catch(e){}}
+    return;
+  }
+  var title=which==='trend'?'Monthly Billing Trend (₹ Lacs)':'Sale by State (₹ Lacs)';
+  var overlay=document.createElement('div');
+  overlay.className='chart-focused-overlay';
+  overlay.id='chart-focus-overlay';
+  overlay.addEventListener('click',function(e){if(e.target===overlay)chartFocus(which);});
+
+  var box=document.createElement('div');
+  box.className='chart-focused-box';
+
+  var hdr=document.createElement('div');
+  hdr.className='chart-focused-header';
+
+  var ttl=document.createElement('span');
+  ttl.className='chart-focused-title';
+  ttl.textContent=title;
+
+  var btn=document.createElement('button');
+  btn.className='chart-focused-close';
+  btn.textContent='✕ Close';
+  btn.addEventListener('click',function(){chartFocus(which);});
+
+  hdr.appendChild(ttl);
+  hdr.appendChild(btn);
+
+  var wrap=document.createElement('div');
+  wrap.className='chart-focused-wrap';
+
+  var canvas=document.createElement('canvas');
+  canvas.id='focus-canvas-'+which;
+  wrap.appendChild(canvas);
+
+  box.appendChild(hdr);
+  box.appendChild(wrap);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  setTimeout(function(){
+    var srcChart=CHARTS[which==='trend'?'trend-all':'state-v'];
+    if(!srcChart)return;
+    if(CHARTS[which+'_focus'])try{CHARTS[which+'_focus'].destroy();}catch(e){}
+    CHARTS[which+'_focus']=new Chart(canvas,{
       type:srcChart.config.type,
       data:JSON.parse(JSON.stringify(srcChart.config.data)),
       options:Object.assign({},srcChart.config.options,{responsive:true,maintainAspectRatio:false})
@@ -1410,6 +1488,62 @@ function chartFocus(which){
     if(!fc||!srcChart)return;
     if(CHARTS[which+'_focus'])try{CHARTS[which+'_focus'].destroy();}catch(e){}
     CHARTS[which+'_focus']=new Chart(fc,{
+      type:srcChart.config.type,
+      data:JSON.parse(JSON.stringify(srcChart.config.data)),
+      options:Object.assign({},srcChart.config.options,{responsive:true,maintainAspectRatio:false})
+    });
+  },50);
+}
+
+
+function chartFocus(which){
+  var existing=document.getElementById('chart-focus-overlay');
+  if(existing){
+    existing.remove();
+    if(CHARTS[which+'_focus']){try{CHARTS[which+'_focus'].destroy();}catch(e){}}
+    return;
+  }
+  var title=which==='trend'?'Monthly Billing Trend (₹ Lacs)':'Sale by State (₹ Lacs)';
+  var overlay=document.createElement('div');
+  overlay.className='chart-focused-overlay';
+  overlay.id='chart-focus-overlay';
+  overlay.addEventListener('click',function(e){if(e.target===overlay)chartFocus(which);});
+
+  var box=document.createElement('div');
+  box.className='chart-focused-box';
+
+  var hdr=document.createElement('div');
+  hdr.className='chart-focused-header';
+
+  var ttl=document.createElement('span');
+  ttl.className='chart-focused-title';
+  ttl.textContent=title;
+
+  var btn=document.createElement('button');
+  btn.className='chart-focused-close';
+  btn.textContent='✕ Close';
+  btn.addEventListener('click',function(){chartFocus(which);});
+
+  hdr.appendChild(ttl);
+  hdr.appendChild(btn);
+
+  var wrap=document.createElement('div');
+  wrap.className='chart-focused-wrap';
+
+  var canvas=document.createElement('canvas');
+  canvas.id='focus-canvas-'+which;
+  wrap.appendChild(canvas);
+
+  box.appendChild(hdr);
+  box.appendChild(wrap);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  setTimeout(function(){
+    var srcChart=CHARTS[which==='trend'?'trend-all':'state-v'];
+    if(!srcChart)return;
+    if(CHARTS[which+'_focus'])try{CHARTS[which+'_focus'].destroy();}catch(e){}
+    CHARTS[which+'_focus']=new Chart(canvas,{
       type:srcChart.config.type,
       data:JSON.parse(JSON.stringify(srcChart.config.data)),
       options:Object.assign({},srcChart.config.options,{responsive:true,maintainAspectRatio:false})
