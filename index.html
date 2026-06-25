@@ -868,7 +868,7 @@ function renderContent(){
       <div style="padding:10px 14px;font-size:11px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:6px">
         <i class="ti ti-table" style="font-size:13px"></i> Business &times; Customer State
       </div>
-      <div style="overflow-x:auto">
+      <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead>
             <tr style="background:#F9FAFB">
@@ -1117,7 +1117,52 @@ function buildStateMatrixRows(){
   var bizList=CURRENT_BIZ==='ALL'?BIZ_LIST:[CURRENT_BIZ];
   var TD='padding:7px 12px;font-size:12px;border-bottom:1px solid #F3F4F6;';
   var TDSUB='padding:8px 12px;font-size:12px;font-weight:800;border-bottom:2px solid #D1FAE5;';
+  var TGTOT='padding:8px 12px;font-size:12px;font-weight:800;border-bottom:3px solid #6EE7B7;color:#065F46;';
   var html='';
+
+  // ── Grand total row (sticky) ──
+  var gYtdA=0,gMtdA=0,gYtdBV=0,gMtdBV=0;
+  for(var gbi=0;gbi<bizList.length;gbi++){
+    var grows=getFilteredRows(bizList[gbi]);
+    var gmtdM=getMTD(grows);
+    var gmtdRows=grows.filter(function(r){return r['Months']===gmtdM;});
+    var gsm={};
+    for(var gri=0;gri<grows.length;gri++){
+      var gr=grows[gri];
+      var gst=gr['Customer State']||'Other';
+      if(!gsm[gst])gsm[gst]={ytdD:{},mtdD:{},ytdBV:0,mtdBV:0};
+      gsm[gst].ytdBV+=parseFloat(gr['BV'])||0;
+      if(gr['Customer Code'])gsm[gst].ytdD[gr['Customer Code']]=1;
+    }
+    for(var gmi=0;gmi<gmtdRows.length;gmi++){
+      var gmr=gmtdRows[gmi];
+      var gmst=gmr['Customer State']||'Other';
+      if(!gsm[gmst])gsm[gmst]={ytdD:{},mtdD:{},ytdBV:0,mtdBV:0};
+      gsm[gmst].mtdBV+=parseFloat(gmr['BV'])||0;
+      if(gmr['Customer Code'])gsm[gmst].mtdD[gmr['Customer Code']]=1;
+    }
+    var gEntries=Object.keys(gsm);
+    var bizYtdD={},bizMtdD={};
+    for(var gei=0;gei<gEntries.length;gei++){
+      var gv=gsm[gEntries[gei]];
+      Object.keys(gv.ytdD).forEach(function(k){bizYtdD[k]=1;});
+      Object.keys(gv.mtdD).forEach(function(k){bizMtdD[k]=1;});
+      gYtdBV+=gv.ytdBV;
+      gMtdBV+=gv.mtdBV;
+    }
+    gYtdA+=Object.keys(bizYtdD).length;
+    gMtdA+=Object.keys(bizMtdD).length;
+  }
+  html+='<tr style="background:#D1FAE5;position:sticky;top:0;z-index:2">'
+    +'<td style="'+TGTOT+'">📊 Grand Total</td>'
+    +'<td style="'+TGTOT+'font-style:italic">All Businesses</td>'
+    +'<td style="'+TGTOT+'text-align:right">'+fmtInt(gYtdA)+'</td>'
+    +'<td style="'+TGTOT+'text-align:right">'+fmtInt(gMtdA)+'</td>'
+    +'<td style="'+TGTOT+'text-align:right">'+fmt(gYtdBV)+'</td>'
+    +'<td style="'+TGTOT+'text-align:right">'+fmt(gMtdBV)+'</td>'
+    +'</tr>';
+
+  // ── Business rows ──
   for(var bi=0;bi<bizList.length;bi++){
     var biz=bizList[bi];
     var cfg=BIZ_CFG[biz];
@@ -1142,12 +1187,15 @@ function buildStateMatrixRows(){
     var entries=Object.keys(sm).map(function(k){return [k,sm[k]];});
     entries.sort(function(a,b){return b[1].ytdBV-a[1].ytdBV;});
     var totYtdA=0,totMtdA=0,totYtdBV=0,totMtdBV=0;
+    var bizAllYtdD={},bizAllMtdD={};
     for(var ei=0;ei<entries.length;ei++){
-      totYtdA+=Object.keys(entries[ei][1].ytdD).length;
-      totMtdA+=Object.keys(entries[ei][1].mtdD).length;
+      Object.keys(entries[ei][1].ytdD).forEach(function(k){bizAllYtdD[k]=1;});
+      Object.keys(entries[ei][1].mtdD).forEach(function(k){bizAllMtdD[k]=1;});
       totYtdBV+=entries[ei][1].ytdBV;
       totMtdBV+=entries[ei][1].mtdBV;
     }
+    totYtdA=Object.keys(bizAllYtdD).length;
+    totMtdA=Object.keys(bizAllMtdD).length;
     html+='<tr style="background:#ECFDF5">'
       +'<td style="'+TDSUB+'color:'+cfg.acc+'">'
       +'<span style="display:inline-flex;align-items:center;gap:6px">'
