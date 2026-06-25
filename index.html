@@ -969,7 +969,8 @@ function renderContent(){
 
   // Render SBU cards
   renderSBUCards(d,cfg);
-  setTimeout(function(){renderStateMatrix();},30);
+  renderStateMatrix();
+  requestAnimationFrame(function(){renderStateMatrix();});
 
   // Render state vertical bar chart
   setTimeout(()=>{
