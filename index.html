@@ -326,9 +326,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <button class="icon-btn green" onclick="refreshData()">
         <i class="ti ti-refresh" style="font-size:13px"></i> Refresh Data
       </button>
-      <button class="icon-btn" onclick="resetApp()">
-        <i class="ti ti-upload" style="font-size:13px"></i> Upload File
-      </button>
+
     </div>
   </div>
 
@@ -619,19 +617,6 @@ function initDashboard(rows,updatedAt){
   if(pill&&updatedAt){pill.textContent='Updated: '+updatedAt;pill.style.display='inline'}
   setPage('summary');
 }
-function resetApp(){
-  document.getElementById('dash').style.display='none';
-  document.getElementById('upload-screen').style.display='flex';
-  document.getElementById('up-spinner').style.display='none';
-  document.getElementById('manual-fallback').style.display='block';
-  document.getElementById('up-icon-el').innerHTML='<i class="ti ti-file-spreadsheet"></i>';
-  document.getElementById('up-title-el').textContent='Upload Excel File';
-  document.getElementById('up-sub-el').textContent='Drop your file or click to browse';
-  document.getElementById('file-input').value='';
-  RAW=[];
-  Object.values(CHARTS).forEach(c=>{try{c.destroy()}catch(e){}});
-}
-
 // ── FY TABS ────────────────────────────────────────────────────
 function buildFYTabs(){
   document.getElementById('fy-tabs').innerHTML=ALL_FYS.map(fy=>`<button class="fy-tab${fy===ACTIVE_FY?' active':''}" onclick="setFY('${fy}')">${fy}</button>`).join('');
