@@ -1091,7 +1091,6 @@ function renderSBUPills(){
 }
 
 // ── SUMMARY ────────────────────────────────────────────────────
-const sumCharts={};
 function renderSummary(){
   document.getElementById('fy-badge').textContent=ACTIVE_FY;
   document.getElementById('sum-overview-cards').innerHTML=BIZ_LIST.map(biz=>{
@@ -1108,11 +1107,13 @@ function renderSummary(){
       <div class="sum-stat"><span class="sum-stat-lbl">Active %</span><span class="sum-stat-val">${pct}%</span></div>
     </div>`;
   }).join('');
-  Object.values(sumCharts).forEach(c=>{try{c.destroy()}catch(e){}});
+  if(window.sumCharts)Object.values(window.sumCharts).forEach(c=>{try{c.destroy()}catch(e){}});
+  window.sumCharts={};
   document.getElementById('sum-trend-row').innerHTML=BIZ_LIST.map(biz=>`<div class="sum-trend-card" id="stc-${biz}"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem"><div class="sum-trend-title" style="color:${BIZ_CFG[biz].acc};margin-bottom:0">${biz} — Monthly Billing</div><button onclick="sumFocus('${biz}')" id="sfb-${biz}" style="border:1px solid ${BIZ_CFG[biz].acc}55;background:${BIZ_CFG[biz].acc}11;color:${BIZ_CFG[biz].acc};border-radius:8px;padding:3px 9px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">⛶ Focus</button></div><div class="sum-trend-wrap" id="stw-${biz}"><canvas id="sc-${biz}"></canvas></div></div>`).join('');
   setTimeout(()=>{
     BIZ_LIST.forEach(biz=>{
       const d=analyseFor(biz);const cfg=BIZ_CFG[biz];
+      if(window.sumCharts[biz]){try{window.sumCharts[biz].destroy();}catch(e){}}
       window.sumCharts[biz]=new Chart(document.getElementById('sc-'+biz),{
         type:'line',
         data:{labels:d.monthTrend.map(m=>m.month.slice(0,3)),datasets:[{data:d.monthTrend.map(m=>m.bv),borderColor:cfg.line,backgroundColor:cfg.line+'22',fill:true,tension:0.42,pointRadius:4,pointBackgroundColor:cfg.line,pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:2.5}]},
