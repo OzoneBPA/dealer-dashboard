@@ -482,6 +482,37 @@ document.addEventListener('click', function(e){
 
 function openChartFullscreen(chartKey, title){
   var existing=document.getElementById('fs-overlay');
+  if(existing){existing.remove();if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}return;}
+
+  var overlay=document.createElement('div');
+  overlay.className='fs-overlay';overlay.id='fs-overlay';
+  overlay.addEventListener('click',function(e){
+    if(e.target===overlay){overlay.remove();if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}}
+  });
+  var box=document.createElement('div');box.className='fs-box';
+  var hdr=document.createElement('div');hdr.className='fs-header';
+  var ttl=document.createElement('span');ttl.className='fs-title';ttl.textContent=title;
+  var cls=document.createElement('button');cls.className='fs-close';cls.textContent='✕ Close';
+  cls.addEventListener('click',function(){overlay.remove();if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}});
+  hdr.appendChild(ttl);hdr.appendChild(cls);
+  var wrap=document.createElement('div');wrap.className='fs-canvas-wrap';
+  var canvas=document.createElement('canvas');canvas.id='fs-canvas';
+  wrap.appendChild(canvas);box.appendChild(hdr);box.appendChild(wrap);
+  overlay.appendChild(box);document.body.appendChild(overlay);
+
+  setTimeout(function(){
+    if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}
+    if(chartKey==='state-v'){
+      renderStateChart('fs-canvas', true);
+    } else {
+      buildTrendChart('fs-canvas', true);
+    }
+  },100);
+}
+
+
+function openChartFullscreen(chartKey, title){
+  var existing=document.getElementById('fs-overlay');
   if(existing){
     existing.remove();
     if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}
@@ -581,7 +612,7 @@ function openChartFullscreen(chartKey, title){
       };
     }
 
-    window._fsChart=new Chart(canvas,{
+    window._fsChart=null; // unused now - renderStateChart handles it
       type:srcType,
       data:JSON.parse(JSON.stringify(srcData)),
       options:opts,
@@ -641,6 +672,63 @@ document.addEventListener('click', function(e){
     if(ic){ ic.textContent = collapse ? '▶' : '▼'; ic.setAttribute('data-open', collapse ? '0' : '1'); }
   });
 });
+
+
+function renderStateChart(canvasId, isFullscreen){
+  var d=window._stateD; var cfg=window._stateCfg;
+  if(!d||!d.states||!d.states.length)return;
+  const k=isFullscreen?'state-v-fs':'state-v';
+    if(CHARTS[k]){CHARTS[k].destroy();delete CHARTS[k]}
+    const canvas=document.getElementById(canvasId);
+    if(!canvas||!d.states.length)return;
+    CHARTS[k]=new Chart(canvas,{
+      type:'bar',
+      data:{
+        labels:d.states.map(s=>s.name),
+        datasets:[{
+          label:'Sale (₹ L)',
+          data:d.states.map(s=>s.bv),
+          backgroundColor:cfg.acc+'BB',
+          borderColor:cfg.acc,
+          borderWidth:1.5,
+          borderRadius:6,
+          borderSkipped:false,
+          barPercentage:0.6,
+          categoryPercentage:0.7
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+' L  |  '+d.states[v.dataIndex].dd+' DD'}}
+        },
+        scales:{
+          x:{ticks:{font:{size:10},color:'#6B7280',autoSkip:false,maxRotation:45,minRotation:30},grid:{display:false},border:{display:false}},
+          y:{display:false,grid:{display:false},border:{display:false}}
+        },
+        layout:{padding:{top:60,left:4,right:4,bottom:4}}
+      },
+      plugins:[{
+        id:'barTopLabels',
+        afterDatasetsDraw(chart){
+          const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);const ds=chart.data.datasets[0];
+          ctx.save();
+          meta.data.forEach((bar,i)=>{
+            const s=d.states[i];
+            ctx.font='700 10px -apple-system,sans-serif';
+            ctx.fillStyle=cfg.acc;ctx.textAlign='center';
+            ctx.fillText('₹'+s.bv.toFixed(2),bar.x,bar.y-20);
+            ctx.font='500 9px -apple-system,sans-serif';
+            ctx.fillStyle='#6B7280';
+            ctx.fillText(s.dd+' DD',bar.x,bar.y-9);
+          });
+          ctx.restore();
+        }
+      }]
+    });
+}
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js">
@@ -754,6 +842,63 @@ document.addEventListener('click', function(e){
     if(ic){ ic.textContent = collapse ? '▶' : '▼'; ic.setAttribute('data-open', collapse ? '0' : '1'); }
   });
 });
+
+
+function renderStateChart(canvasId, isFullscreen){
+  var d=window._stateD; var cfg=window._stateCfg;
+  if(!d||!d.states||!d.states.length)return;
+  const k=isFullscreen?'state-v-fs':'state-v';
+    if(CHARTS[k]){CHARTS[k].destroy();delete CHARTS[k]}
+    const canvas=document.getElementById(canvasId);
+    if(!canvas||!d.states.length)return;
+    CHARTS[k]=new Chart(canvas,{
+      type:'bar',
+      data:{
+        labels:d.states.map(s=>s.name),
+        datasets:[{
+          label:'Sale (₹ L)',
+          data:d.states.map(s=>s.bv),
+          backgroundColor:cfg.acc+'BB',
+          borderColor:cfg.acc,
+          borderWidth:1.5,
+          borderRadius:6,
+          borderSkipped:false,
+          barPercentage:0.6,
+          categoryPercentage:0.7
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+' L  |  '+d.states[v.dataIndex].dd+' DD'}}
+        },
+        scales:{
+          x:{ticks:{font:{size:10},color:'#6B7280',autoSkip:false,maxRotation:45,minRotation:30},grid:{display:false},border:{display:false}},
+          y:{display:false,grid:{display:false},border:{display:false}}
+        },
+        layout:{padding:{top:60,left:4,right:4,bottom:4}}
+      },
+      plugins:[{
+        id:'barTopLabels',
+        afterDatasetsDraw(chart){
+          const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);const ds=chart.data.datasets[0];
+          ctx.save();
+          meta.data.forEach((bar,i)=>{
+            const s=d.states[i];
+            ctx.font='700 10px -apple-system,sans-serif';
+            ctx.fillStyle=cfg.acc;ctx.textAlign='center';
+            ctx.fillText('₹'+s.bv.toFixed(2),bar.x,bar.y-20);
+            ctx.font='500 9px -apple-system,sans-serif';
+            ctx.fillStyle='#6B7280';
+            ctx.fillText(s.dd+' DD',bar.x,bar.y-9);
+          });
+          ctx.restore();
+        }
+      }]
+    });
+}
 
 </script>
 <script>
@@ -1237,59 +1382,8 @@ function renderContent(){
   renderSBUCards(d,cfg);
 
   // Render state vertical bar chart
-  setTimeout(()=>{
-    const k='state-v';
-    if(CHARTS[k]){CHARTS[k].destroy();delete CHARTS[k]}
-    const canvas=document.getElementById('state-vchart');
-    if(!canvas||!d.states.length)return;
-    CHARTS[k]=new Chart(canvas,{
-      type:'bar',
-      data:{
-        labels:d.states.map(s=>s.name),
-        datasets:[{
-          label:'Sale (₹ L)',
-          data:d.states.map(s=>s.bv),
-          backgroundColor:cfg.acc+'BB',
-          borderColor:cfg.acc,
-          borderWidth:1.5,
-          borderRadius:6,
-          borderSkipped:false,
-          barPercentage:0.6,
-          categoryPercentage:0.7
-        }]
-      },
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        plugins:{
-          legend:{display:false},
-          tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+' L  |  '+d.states[v.dataIndex].dd+' DD'}}
-        },
-        scales:{
-          x:{ticks:{font:{size:10},color:'#6B7280',autoSkip:false,maxRotation:45,minRotation:30},grid:{display:false},border:{display:false}},
-          y:{display:false,grid:{display:false},border:{display:false}}
-        },
-        layout:{padding:{top:60,left:4,right:4,bottom:4}}
-      },
-      plugins:[{
-        id:'barTopLabels',
-        afterDatasetsDraw(chart){
-          const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);const ds=chart.data.datasets[0];
-          ctx.save();
-          meta.data.forEach((bar,i)=>{
-            const s=d.states[i];
-            ctx.font='700 10px -apple-system,sans-serif';
-            ctx.fillStyle=cfg.acc;ctx.textAlign='center';
-            ctx.fillText('₹'+s.bv.toFixed(2),bar.x,bar.y-20);
-            ctx.font='500 9px -apple-system,sans-serif';
-            ctx.fillStyle='#6B7280';
-            ctx.fillText(s.dd+' DD',bar.x,bar.y-9);
-          });
-          ctx.restore();
-        }
-      }]
-    });
-  },60);
+  window._stateD=d; window._stateCfg=cfg;
+  setTimeout(()=>{ renderStateChart('state-vchart',false); },60);
 }
 
 function renderFilterChips(){
@@ -1669,6 +1763,63 @@ document.addEventListener('click', function(e){
     if(ic){ ic.textContent = collapse ? '▶' : '▼'; ic.setAttribute('data-open', collapse ? '0' : '1'); }
   });
 });
+
+
+function renderStateChart(canvasId, isFullscreen){
+  var d=window._stateD; var cfg=window._stateCfg;
+  if(!d||!d.states||!d.states.length)return;
+  const k=isFullscreen?'state-v-fs':'state-v';
+    if(CHARTS[k]){CHARTS[k].destroy();delete CHARTS[k]}
+    const canvas=document.getElementById(canvasId);
+    if(!canvas||!d.states.length)return;
+    CHARTS[k]=new Chart(canvas,{
+      type:'bar',
+      data:{
+        labels:d.states.map(s=>s.name),
+        datasets:[{
+          label:'Sale (₹ L)',
+          data:d.states.map(s=>s.bv),
+          backgroundColor:cfg.acc+'BB',
+          borderColor:cfg.acc,
+          borderWidth:1.5,
+          borderRadius:6,
+          borderSkipped:false,
+          barPercentage:0.6,
+          categoryPercentage:0.7
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+' L  |  '+d.states[v.dataIndex].dd+' DD'}}
+        },
+        scales:{
+          x:{ticks:{font:{size:10},color:'#6B7280',autoSkip:false,maxRotation:45,minRotation:30},grid:{display:false},border:{display:false}},
+          y:{display:false,grid:{display:false},border:{display:false}}
+        },
+        layout:{padding:{top:60,left:4,right:4,bottom:4}}
+      },
+      plugins:[{
+        id:'barTopLabels',
+        afterDatasetsDraw(chart){
+          const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);const ds=chart.data.datasets[0];
+          ctx.save();
+          meta.data.forEach((bar,i)=>{
+            const s=d.states[i];
+            ctx.font='700 10px -apple-system,sans-serif';
+            ctx.fillStyle=cfg.acc;ctx.textAlign='center';
+            ctx.fillText('₹'+s.bv.toFixed(2),bar.x,bar.y-20);
+            ctx.font='500 9px -apple-system,sans-serif';
+            ctx.fillStyle='#6B7280';
+            ctx.fillText(s.dd+' DD',bar.x,bar.y-9);
+          });
+          ctx.restore();
+        }
+      }]
+    });
+}
 
 </script>
 </body>
