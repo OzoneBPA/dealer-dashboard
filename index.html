@@ -339,8 +339,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="fy-tabs" id="fy-tabs"></div>
     <div class="fy-separator"></div>
     <div class="page-tabs">
-      <button class="page-tab active" id="ptab-detail" onclick="setPage('detail')"><i class="ti ti-layout-dashboard" style="font-size:12px"></i> Detail View</button>
-      <button class="page-tab" id="ptab-summary" onclick="setPage('summary')"><i class="ti ti-table" style="font-size:12px"></i> Summary</button>
+      <button class="page-tab active" id="ptab-summary" onclick="setPage('summary')"><i class="ti ti-table" style="font-size:12px"></i> Summary</button>
+      <button class="page-tab" id="ptab-detail" onclick="setPage('detail')"><i class="ti ti-layout-dashboard" style="font-size:12px"></i> Detail View</button>
     </div>
   </div>
 
@@ -501,7 +501,7 @@ function initDashboard(rows,updatedAt){
   document.getElementById('dash').style.display='block';
   const pill=document.getElementById('last-updated-pill');
   if(pill&&updatedAt){pill.textContent='Updated: '+updatedAt;pill.style.display='inline'}
-  setPage('detail');
+  setPage('summary');
 }
 function resetApp(){
   document.getElementById('dash').style.display='none';
