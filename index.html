@@ -291,7 +291,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 }
 
 .sm-row:hover{background:#F9FAFB}
-.sm-row:hover{background:#F9FAFB}
 </style>
 </head>
 <body>
@@ -477,20 +476,16 @@ function renderStateMatrix(){
     for(var si=0;si<entries.length;si++){
       var est=entries[si][0];
       var ev=entries[si][1];
-      var ytdA=Object.keys(ev.ytdD).length;
-      var mtdA=Object.keys(ev.mtdD).length;
       html+='<tr class="sm-row">'
         +'<td style="'+TD+'"></td>'
         +'<td style="'+TD+'padding-left:24px;color:#374151">'+est+'</td>'
-        +'<td style="'+TD+'text-align:right;color:'+cfg.acc+';font-weight:600">'+fmtInt(ytdA)+'</td>'
-        +'<td style="'+TD+'text-align:right">'+fmtInt(mtdA)+'</td>'
+        +'<td style="'+TD+'text-align:right;color:'+cfg.acc+';font-weight:600">'+fmtInt(Object.keys(ev.ytdD).length)+'</td>'
+        +'<td style="'+TD+'text-align:right">'+fmtInt(Object.keys(ev.mtdD).length)+'</td>'
         +'<td style="'+TD+'text-align:right">'+fmt(ev.ytdBV)+'</td>'
         +'<td style="'+TD+'text-align:right">'+fmt(ev.mtdBV)+'</td>'
         +'</tr>';
     }
-    if(bizList.length>1){
-      html+='<tr><td colspan="6" style="padding:3px;background:#F0F2F7"></td></tr>';
-    }
+    if(bizList.length>1) html+='<tr><td colspan="6" style="padding:3px;background:#F0F2F7"></td></tr>';
   }
   tbody.innerHTML=html;
 }
@@ -935,11 +930,11 @@ function renderContent(){
 
 
     <!-- Business x State Matrix -->
-    <div style="margin-bottom:1rem">
-      <div style="font-size:11px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:.7rem;display:flex;align-items:center;gap:6px">
-        <i class="ti ti-table" style="font-size:13px;color:${cfg.acc}"></i> Business x State
+    <div style="margin-bottom:1rem;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+      <div style="padding:10px 14px;font-size:11px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:6px">
+        <i class="ti ti-table" style="font-size:13px"></i> Business x Customer State
       </div>
-      <div style="overflow-x:auto;border-radius:14px;border:1px solid #E5E7EB;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+      <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead>
             <tr style="background:#F9FAFB">
@@ -969,8 +964,7 @@ function renderContent(){
 
   // Render SBU cards
   renderSBUCards(d,cfg);
-  renderStateMatrix();
-  requestAnimationFrame(function(){renderStateMatrix();});
+  setTimeout(function(){renderStateMatrix();},50);
 
   // Render state vertical bar chart
   setTimeout(()=>{
@@ -1083,34 +1077,23 @@ function makeChip(label,icon='ti-filter',textColor='#4338CA',bg='#EEF2FF',border
 function resetFilter(key){FS[key].act=[...FS[key].all];FS[key].pend=[...FS[key].all];updateDDBadge(key);if(CURRENT_PAGE==='detail')renderDetail();else renderSummary()}
 
 function renderSBUCards(d,cfg){
-  var sbuTotal=d.sbuTotal||1;
-  var grid=document.getElementById('sbu-grid');
+  const sbuTotal=d.sbuTotal||1;
+  const grid=document.getElementById('sbu-grid');
   if(!grid)return;
-  if(!d.sbus||!d.sbus.length){grid.innerHTML='<div class="no-data">No SBU data</div>';return;}
-  var html='';
-  for(var i=0;i<d.sbus.length;i++){
-    var s=d.sbus[i];
-    var p=Math.round(s.bv/sbuTotal*100);
-    var sel=ACT_SBU.has(s.name);
-    var grad=CAT_GRAD[i%CAT_GRAD.length];
-    var icon=CAT_ICONS[i%CAT_ICONS.length];
-    html+='<div class="cat-card'+(sel?' sel':'')+'" style="background:'+grad+'" data-idx="'+i+'" onclick="handleSBUClick(this)">'
-      +'<div class="cc-c1"></div><div class="cc-c2"></div>'
-      +(sel?'<div style="position:absolute;top:10px;right:10px;z-index:2;background:rgba(255,255,255,.25);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:13px;color:#fff"></i></div>':'')
-      +'<span class="cc-icon">'+icon+'</span>'
-      +'<div class="cc-name">'+s.name.toUpperCase().slice(0,28)+'</div>'
-      +'<div class="cc-val">&#x20b9;'+fmt(s.bv)+'</div>'
-      +'<div class="cc-pct">'+p+'% of total &middot; '+s.dealers+' DD</div>'
-      +'<div class="cc-prog"><div class="cc-fill" style="width:'+p+'%"></div></div>'
-      +'</div>';
-  }
-  grid.innerHTML=html;
-  window._sbuNames=d.sbus.map(function(s){return s.name;});
+  grid.innerHTML=d.sbus.length
+    ?d.sbus.map((s,i)=>{
+        const p=Math.round(s.bv/sbuTotal*100);const sel=ACT_SBU.has(s.name);
+        return`<div class="cat-card${sel?' sel':''}" style="background:${CAT_GRAD[i%CAT_GRAD.length]}" onclick="toggleSBU('${s.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">
+          <div class="cc-c1"></div><div class="cc-c2"></div>
+          ${sel?'<div style="position:absolute;top:10px;right:10px;z-index:2;background:rgba(255,255,255,.25);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:13px;color:#fff"></i></div>':''}
+          <span class="cc-icon">${CAT_ICONS[i%CAT_ICONS.length]}</span>
+          <div class="cc-name">${s.name.toUpperCase().slice(0,28)}</div>
+          <div class="cc-val">₹${fmt(s.bv)}</div>
+          <div class="cc-pct">${p}% of total · ${s.dealers} DD</div>
+          <div class="cc-prog"><div class="cc-fill" style="width:${p}%"></div></div>
+        </div>`}).join('')
+    :'<div class="no-data">No SBU data</div>';
   grid.classList.toggle('has-sel',ACT_SBU.size>0);
-}
-function handleSBUClick(el){
-  var i=parseInt(el.getAttribute('data-idx'));
-  if(window._sbuNames&&window._sbuNames[i]!==undefined)toggleSBU(window._sbuNames[i]);
 }
 
 // ── SBU MULTI-SELECT ───────────────────────────────────────────
