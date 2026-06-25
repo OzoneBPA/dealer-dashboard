@@ -490,7 +490,7 @@ function openChartFullscreen(chartKey, title){
   var overlay = document.createElement('div');
   overlay.className = 'fs-overlay';
   overlay.id = 'fs-overlay';
-  overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.remove(); });
+  overlay.addEventListener('click', function(e){ if(e.target===overlay){ overlay.remove(); if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}  } });
 
   var box = document.createElement('div');
   box.className = 'fs-box';
@@ -522,13 +522,16 @@ function openChartFullscreen(chartKey, title){
 
   setTimeout(function(){
     if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}
+    // Include plugins from source chart so data labels render
     window._fsChart = new Chart(canvas, {
       type: srcChart.config.type,
       data: JSON.parse(JSON.stringify(srcChart.config.data)),
-      options: Object.assign({}, srcChart.config.options, {responsive:true, maintainAspectRatio:false})
+      options: Object.assign({}, srcChart.config.options, {responsive:true, maintainAspectRatio:false, layout:{padding:{top:40,bottom:4,left:8,right:8}}}),
+      plugins: srcChart.config.plugins || []
     });
   }, 50);
 }
+
 
 
 // Matrix expand/collapse all
