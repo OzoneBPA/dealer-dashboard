@@ -1238,7 +1238,7 @@ function buildStateMatrixRows(){
     var grpId='smgrp-'+biz;
 
     // Clickable subtotal row = toggle
-    html+='<tr style="background:#ECFDF5;cursor:pointer" onclick="toggleMatrixGroup(''+grpId+'')">'
+    html+='<tr style="background:#ECFDF5;cursor:pointer" data-grp="'+grpId+'" onclick="toggleMatrixGroup(this.getAttribute('data-grp'))">'
       +'<td style="'+TDSUB+'color:'+cfg.acc+'">'
       +'<span style="display:inline-flex;align-items:center;gap:6px">'
       +'<span style="width:8px;height:8px;border-radius:50%;background:'+cfg.acc+';display:inline-block"></span>'
@@ -1270,11 +1270,11 @@ function buildStateMatrixRows(){
 }
 
 function toggleMatrixGroup(grpId){
-  var ic=document.getElementById(grpId+'-ic');
   var rows=document.querySelectorAll('tr.'+grpId);
-  var isOpen=ic&&ic.innerHTML==='&#9660;';
+  var ic=document.getElementById(grpId+'-ic');
+  var isOpen=ic&&ic.getAttribute('data-open')!=='0';
   rows.forEach(function(r){r.style.display=isOpen?'none':'';});
-  if(ic)ic.innerHTML=isOpen?'&#9654;':'&#9660;';
+  if(ic){ic.textContent=isOpen?'▶':'▼';ic.setAttribute('data-open',isOpen?'0':'1');}
 }
 
 
