@@ -295,14 +295,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 #sum-trend-row.has-focus .sum-trend-card:not(.focused){display:none}
 #sum-trend-row.has-focus .sum-trend-card.focused .sum-trend-wrap{height:340px!important}
 
-/* Fullscreen overlay */
-.fs-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:2rem}
-.fs-box{background:#fff;border-radius:20px;padding:1.5rem;width:100%;max-width:1200px;height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3)}
-.fs-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-shrink:0}
-.fs-title{font-size:14px;font-weight:700;color:#111827}
-.fs-close{border:none;background:#F3F4F6;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;color:#374151}
-.fs-close:hover{background:#E5E7EB}
-.fs-canvas-wrap{flex:1;position:relative;min-height:0}
+/* Chart focus mode */
+.trend-card.chart-focused{grid-column:1/-1;transition:all .3s}
+.trend-card.chart-focused .trend-wrap{height:400px!important}
+.state-section.chart-focused .state-vchart-wrap-inner{height:500px!important}
 </style>
 </head>
 <body>
@@ -730,6 +726,37 @@ function renderStateChart(canvasId, isFullscreen){
     });
 }
 
+
+function toggleChartFocus(which){
+  if(which==='trend'){
+    var card=document.getElementById('trend-card');
+    var wrap=document.getElementById('trend-wrap-el');
+    var btn=document.getElementById('btn-fullscreen-trend');
+    var focused=card&&card.classList.contains('chart-focused');
+    if(card)card.classList.toggle('chart-focused');
+    if(wrap)wrap.style.height=focused?'':'400px';
+    if(btn)btn.title=focused?'Expand':'Collapse';
+    if(btn)btn.style.color=focused?'#9CA3AF':'#374151';
+    setTimeout(function(){if(CHARTS['trend-all'])CHARTS['trend-all'].resize();},350);
+  } else {
+    var wrap2=document.getElementById('state-vchart-wrap');
+    var btn2=document.getElementById('btn-fullscreen-state');
+    var sec=document.querySelector('.state-section');
+    var focused2=sec&&sec.classList.contains('chart-focused');
+    if(sec)sec.classList.toggle('chart-focused');
+    if(wrap2)wrap2.style.height=focused2?'320px':'520px';
+    if(btn2)btn2.style.color=focused2?'#9CA3AF':'#374151';
+    setTimeout(function(){if(CHARTS['state-v'])CHARTS['state-v'].resize();},350);
+  }
+}
+
+// Chart focus buttons
+document.addEventListener('click', function(e){
+  var btn=e.target.closest('#btn-fullscreen-trend, #btn-fullscreen-state');
+  if(!btn)return;
+  toggleChartFocus(btn.id==='btn-fullscreen-trend'?'trend':'state');
+});
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js">
 function sumFocus(biz){
@@ -899,6 +926,37 @@ function renderStateChart(canvasId, isFullscreen){
       }]
     });
 }
+
+
+function toggleChartFocus(which){
+  if(which==='trend'){
+    var card=document.getElementById('trend-card');
+    var wrap=document.getElementById('trend-wrap-el');
+    var btn=document.getElementById('btn-fullscreen-trend');
+    var focused=card&&card.classList.contains('chart-focused');
+    if(card)card.classList.toggle('chart-focused');
+    if(wrap)wrap.style.height=focused?'':'400px';
+    if(btn)btn.title=focused?'Expand':'Collapse';
+    if(btn)btn.style.color=focused?'#9CA3AF':'#374151';
+    setTimeout(function(){if(CHARTS['trend-all'])CHARTS['trend-all'].resize();},350);
+  } else {
+    var wrap2=document.getElementById('state-vchart-wrap');
+    var btn2=document.getElementById('btn-fullscreen-state');
+    var sec=document.querySelector('.state-section');
+    var focused2=sec&&sec.classList.contains('chart-focused');
+    if(sec)sec.classList.toggle('chart-focused');
+    if(wrap2)wrap2.style.height=focused2?'320px':'520px';
+    if(btn2)btn2.style.color=focused2?'#9CA3AF':'#374151';
+    setTimeout(function(){if(CHARTS['state-v'])CHARTS['state-v'].resize();},350);
+  }
+}
+
+// Chart focus buttons
+document.addEventListener('click', function(e){
+  var btn=e.target.closest('#btn-fullscreen-trend, #btn-fullscreen-state');
+  if(!btn)return;
+  toggleChartFocus(btn.id==='btn-fullscreen-trend'?'trend':'state');
+});
 
 </script>
 <script>
@@ -1820,6 +1878,37 @@ function renderStateChart(canvasId, isFullscreen){
       }]
     });
 }
+
+
+function toggleChartFocus(which){
+  if(which==='trend'){
+    var card=document.getElementById('trend-card');
+    var wrap=document.getElementById('trend-wrap-el');
+    var btn=document.getElementById('btn-fullscreen-trend');
+    var focused=card&&card.classList.contains('chart-focused');
+    if(card)card.classList.toggle('chart-focused');
+    if(wrap)wrap.style.height=focused?'':'400px';
+    if(btn)btn.title=focused?'Expand':'Collapse';
+    if(btn)btn.style.color=focused?'#9CA3AF':'#374151';
+    setTimeout(function(){if(CHARTS['trend-all'])CHARTS['trend-all'].resize();},350);
+  } else {
+    var wrap2=document.getElementById('state-vchart-wrap');
+    var btn2=document.getElementById('btn-fullscreen-state');
+    var sec=document.querySelector('.state-section');
+    var focused2=sec&&sec.classList.contains('chart-focused');
+    if(sec)sec.classList.toggle('chart-focused');
+    if(wrap2)wrap2.style.height=focused2?'320px':'520px';
+    if(btn2)btn2.style.color=focused2?'#9CA3AF':'#374151';
+    setTimeout(function(){if(CHARTS['state-v'])CHARTS['state-v'].resize();},350);
+  }
+}
+
+// Chart focus buttons
+document.addEventListener('click', function(e){
+  var btn=e.target.closest('#btn-fullscreen-trend, #btn-fullscreen-state');
+  if(!btn)return;
+  toggleChartFocus(btn.id==='btn-fullscreen-trend'?'trend':'state');
+});
 
 </script>
 </body>
