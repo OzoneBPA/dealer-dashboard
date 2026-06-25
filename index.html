@@ -294,6 +294,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 /* Summary focus mode */
 #sum-trend-row.has-focus .sum-trend-card:not(.focused){display:none}
 #sum-trend-row.has-focus .sum-trend-card.focused .sum-trend-wrap{height:340px!important}
+
+/* Chart focus mode */
+.chart-focused-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+.chart-focused-box{background:#fff;border-radius:20px;padding:1.5rem;width:100%;max-width:1100px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.chart-focused-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.chart-focused-title{font-size:14px;font-weight:700;color:#111827}
+.chart-focused-close{border:none;background:#F3F4F6;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.chart-focused-close:hover{background:#E5E7EB}
+.chart-focused-wrap{flex:1;position:relative;min-height:400px}
 </style>
 </head>
 <body>
@@ -399,9 +408,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <div class="donut-wrap"><canvas id="donut-chart" role="img" aria-label="Dealer count donut chart"></canvas></div>
 
       </div>
-      <div class="trend-card">
-        <div class="trend-title">Monthly Billing Trend (₹ Lacs) — All Business</div>
-        <div class="trend-wrap"><canvas id="trend-all" role="img" aria-label="All business billing trend"></canvas></div>
+      <div class="trend-card" id="trend-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+          <div class="trend-title" style="margin-bottom:0">Monthly Billing Trend (₹ Lacs) — All Business</div>
+          <button onclick="chartFocus('trend')" id="tfb-trend" style="border:1px solid #6B7280;background:#F9FAFB;color:#374151;border-radius:8px;padding:3px 9px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">⛶ Focus</button>
+        </div>
+        <div class="trend-wrap" id="trend-wrap-el"><canvas id="trend-all" role="img" aria-label="All business billing trend"></canvas></div>
       </div>
     </div>
 
@@ -446,6 +458,41 @@ function sumFocus(biz){
   },150);
 }
 
+
+function chartFocus(which){
+  // Remove existing overlay
+  var existing=document.getElementById('chart-focus-overlay');
+  if(existing){existing.remove();if(CHARTS[which+'_focus']){try{CHARTS[which+'_focus'].destroy();}catch(e){}}return;}
+
+  var overlay=document.createElement('div');
+  overlay.className='chart-focused-overlay';
+  overlay.id='chart-focus-overlay';
+  overlay.onclick=function(e){if(e.target===overlay)chartFocus(which);};
+
+  var title=which==='trend'?'Monthly Billing Trend (₹ Lacs)':'Sale by State (₹ Lacs)';
+  overlay.innerHTML='<div class="chart-focused-box">'
+    +'<div class="chart-focused-header">'
+    +'<span class="chart-focused-title">'+title+'</span>'
+    +'<button class="chart-focused-close" onclick="chartFocus(''+which+'')">✕ Close</button>'
+    +'</div>'
+    +'<div class="chart-focused-wrap"><canvas id="focus-canvas-'+which+'"></canvas></div>'
+    +'</div>';
+  document.body.appendChild(overlay);
+
+  // Clone the chart into the focus canvas
+  setTimeout(function(){
+    var srcChart=CHARTS[which==='trend'?'trend-all':'state-v'];
+    var fc=document.getElementById('focus-canvas-'+which);
+    if(!fc||!srcChart)return;
+    if(CHARTS[which+'_focus'])try{CHARTS[which+'_focus'].destroy();}catch(e){}
+    CHARTS[which+'_focus']=new Chart(fc,{
+      type:srcChart.config.type,
+      data:JSON.parse(JSON.stringify(srcChart.config.data)),
+      options:Object.assign({},srcChart.config.options,{responsive:true,maintainAspectRatio:false})
+    });
+  },50);
+}
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js">
 function sumFocus(biz){
@@ -470,6 +517,41 @@ function sumFocus(biz){
       if(window.sumCharts&&window.sumCharts[b])try{window.sumCharts[b].resize();}catch(e){}
     });
   },150);
+}
+
+
+function chartFocus(which){
+  // Remove existing overlay
+  var existing=document.getElementById('chart-focus-overlay');
+  if(existing){existing.remove();if(CHARTS[which+'_focus']){try{CHARTS[which+'_focus'].destroy();}catch(e){}}return;}
+
+  var overlay=document.createElement('div');
+  overlay.className='chart-focused-overlay';
+  overlay.id='chart-focus-overlay';
+  overlay.onclick=function(e){if(e.target===overlay)chartFocus(which);};
+
+  var title=which==='trend'?'Monthly Billing Trend (₹ Lacs)':'Sale by State (₹ Lacs)';
+  overlay.innerHTML='<div class="chart-focused-box">'
+    +'<div class="chart-focused-header">'
+    +'<span class="chart-focused-title">'+title+'</span>'
+    +'<button class="chart-focused-close" onclick="chartFocus(''+which+'')">✕ Close</button>'
+    +'</div>'
+    +'<div class="chart-focused-wrap"><canvas id="focus-canvas-'+which+'"></canvas></div>'
+    +'</div>';
+  document.body.appendChild(overlay);
+
+  // Clone the chart into the focus canvas
+  setTimeout(function(){
+    var srcChart=CHARTS[which==='trend'?'trend-all':'state-v'];
+    var fc=document.getElementById('focus-canvas-'+which);
+    if(!fc||!srcChart)return;
+    if(CHARTS[which+'_focus'])try{CHARTS[which+'_focus'].destroy();}catch(e){}
+    CHARTS[which+'_focus']=new Chart(fc,{
+      type:srcChart.config.type,
+      data:JSON.parse(JSON.stringify(srcChart.config.data)),
+      options:Object.assign({},srcChart.config.options,{responsive:true,maintainAspectRatio:false})
+    });
+  },50);
 }
 
 </script>
@@ -933,8 +1015,11 @@ function renderContent(){
     </div>
 
     <!-- State vertical bar chart -->
-    <div class="state-section">
-      <div class="state-title"><i class="ti ti-map" style="font-size:13px;color:${cfg.acc}"></i> Sale by State (₹ Lacs)</div>
+    <div class="state-section" id="state-section-el">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+        <div class="state-title" style="margin-bottom:0"><i class="ti ti-map" style="font-size:13px;color:${cfg.acc}"></i> Sale by State (₹ Lacs)</div>
+        <button onclick="chartFocus('state')" id="tfb-state" style="border:1px solid #6B7280;background:#F9FAFB;color:#374151;border-radius:8px;padding:3px 9px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">⛶ Focus</button>
+      </div>
       <div id="state-vchart-wrap" style="position:relative;height:320px;width:100%">
         <canvas id="state-vchart" role="img" aria-label="Sale by state vertical bar chart"></canvas>
       </div>
@@ -1295,6 +1380,41 @@ function sumFocus(biz){
       if(window.sumCharts&&window.sumCharts[b])try{window.sumCharts[b].resize();}catch(e){}
     });
   },150);
+}
+
+
+function chartFocus(which){
+  // Remove existing overlay
+  var existing=document.getElementById('chart-focus-overlay');
+  if(existing){existing.remove();if(CHARTS[which+'_focus']){try{CHARTS[which+'_focus'].destroy();}catch(e){}}return;}
+
+  var overlay=document.createElement('div');
+  overlay.className='chart-focused-overlay';
+  overlay.id='chart-focus-overlay';
+  overlay.onclick=function(e){if(e.target===overlay)chartFocus(which);};
+
+  var title=which==='trend'?'Monthly Billing Trend (₹ Lacs)':'Sale by State (₹ Lacs)';
+  overlay.innerHTML='<div class="chart-focused-box">'
+    +'<div class="chart-focused-header">'
+    +'<span class="chart-focused-title">'+title+'</span>'
+    +'<button class="chart-focused-close" onclick="chartFocus(''+which+'')">✕ Close</button>'
+    +'</div>'
+    +'<div class="chart-focused-wrap"><canvas id="focus-canvas-'+which+'"></canvas></div>'
+    +'</div>';
+  document.body.appendChild(overlay);
+
+  // Clone the chart into the focus canvas
+  setTimeout(function(){
+    var srcChart=CHARTS[which==='trend'?'trend-all':'state-v'];
+    var fc=document.getElementById('focus-canvas-'+which);
+    if(!fc||!srcChart)return;
+    if(CHARTS[which+'_focus'])try{CHARTS[which+'_focus'].destroy();}catch(e){}
+    CHARTS[which+'_focus']=new Chart(fc,{
+      type:srcChart.config.type,
+      data:JSON.parse(JSON.stringify(srcChart.config.data)),
+      options:Object.assign({},srcChart.config.options,{responsive:true,maintainAspectRatio:false})
+    });
+  },50);
 }
 
 </script>
