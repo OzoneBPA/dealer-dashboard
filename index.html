@@ -1140,11 +1140,19 @@ function renderSummary(){
     BIZ_LIST.forEach(biz=>{
       const d=analyseFor(biz);const cfg=BIZ_CFG[biz];
       if(window.sumCharts[biz]){try{window.sumCharts[biz].destroy();}catch(e){}}
+      const activeCounts=d.monthTrend.map(m=>m.active);
       window.sumCharts[biz]=new Chart(document.getElementById('sc-'+biz),{
         type:'line',
         data:{labels:d.monthTrend.map(m=>m.month.slice(0,3)),datasets:[{data:d.monthTrend.map(m=>m.bv),borderColor:cfg.line,backgroundColor:cfg.line+'22',fill:true,tension:0.42,pointRadius:4,pointBackgroundColor:cfg.line,pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:2.5}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+'L'}}},scales:{x:{ticks:{font:{size:10}},grid:{display:false}},y:{display:false}},layout:{padding:{top:18}}},
-        plugins:[{id:'dls',afterDatasetsDraw(chart){const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);const ds=chart.data.datasets[0];ctx.save();ctx.font='700 9px -apple-system,sans-serif';ctx.textAlign='center';ctx.fillStyle=cfg.acc;meta.data.forEach((pt,i)=>{ctx.fillText('₹'+fmt(ds.data[i]),pt.x,pt.y-10)});ctx.restore();}}]
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+'L | '+activeCounts[v.dataIndex]+' DD'}}},scales:{x:{ticks:{font:{size:10}},grid:{display:false}},y:{display:false}},layout:{padding:{top:34}}},
+        plugins:[{id:'dls',afterDatasetsDraw(chart){const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);const ds=chart.data.datasets[0];ctx.save();ctx.textAlign='center';
+          meta.data.forEach((pt,i)=>{
+            ctx.font='700 9px -apple-system,sans-serif';ctx.fillStyle=cfg.acc;
+            ctx.fillText('₹'+fmt(ds.data[i]),pt.x,pt.y-18);
+            ctx.font='500 8px -apple-system,sans-serif';ctx.fillStyle='#6B7280';
+            ctx.fillText(activeCounts[i]+' DD',pt.x,pt.y-8);
+          });
+          ctx.restore();}}]
       });
     });
   },50);
