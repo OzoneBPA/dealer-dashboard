@@ -290,7 +290,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   .drill-btn{font-size:11px;padding:6px 12px}
 }
 
-.sm-row:hover{background:#F9FAFB}
 </style>
 </head>
 <body>
@@ -425,9 +424,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
-function renderStateMatrix(){
-  var tbody=document.getElementById('state-matrix-body');
-  if(!tbody)return;
+function buildStateMatrixRows(){
   var bizList=CURRENT_BIZ==='ALL'?BIZ_LIST:[CURRENT_BIZ];
   var TD='padding:7px 12px;font-size:12px;border-bottom:1px solid #F3F4F6;';
   var TDSUB='padding:8px 12px;font-size:12px;font-weight:800;border-bottom:2px solid #D1FAE5;';
@@ -476,7 +473,7 @@ function renderStateMatrix(){
     for(var si=0;si<entries.length;si++){
       var est=entries[si][0];
       var ev=entries[si][1];
-      html+='<tr class="sm-row">'
+      html+='<tr>'
         +'<td style="'+TD+'"></td>'
         +'<td style="'+TD+'padding-left:24px;color:#374151">'+est+'</td>'
         +'<td style="'+TD+'text-align:right;color:'+cfg.acc+';font-weight:600">'+fmtInt(Object.keys(ev.ytdD).length)+'</td>'
@@ -487,7 +484,7 @@ function renderStateMatrix(){
     }
     if(bizList.length>1) html+='<tr><td colspan="6" style="padding:3px;background:#F0F2F7"></td></tr>';
   }
-  tbody.innerHTML=html;
+  return html;
 }
 
 </script>
@@ -927,8 +924,6 @@ function renderContent(){
     <div class="sbu-sec-title"><i class="ti ti-layout-grid" style="font-size:13px"></i> SBU Breakdown <span style="font-size:10px;font-weight:400;color:#D1D5DB">— click to filter · multi-select</span></div>
     <div class="cat-grid${ACT_SBU.size>0?' has-sel':''}" id="sbu-grid"></div>
 
-
-
     <!-- Business x State Matrix -->
     <div style="margin-bottom:1rem;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)">
       <div style="padding:10px 14px;font-size:11px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:6px">
@@ -946,7 +941,7 @@ function renderContent(){
               <th style="padding:8px 12px;text-align:right;font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #E5E7EB;white-space:nowrap">MTD Billed</th>
             </tr>
           </thead>
-          <tbody id="state-matrix-body"></tbody>
+          <tbody>${buildStateMatrixRows()}</tbody>
         </table>
       </div>
     </div>
@@ -964,7 +959,6 @@ function renderContent(){
 
   // Render SBU cards
   renderSBUCards(d,cfg);
-  setTimeout(function(){renderStateMatrix();},50);
 
   // Render state vertical bar chart
   setTimeout(()=>{
