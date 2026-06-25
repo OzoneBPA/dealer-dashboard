@@ -860,6 +860,10 @@ function renderContent(){
     <div id="filter-chips-row" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.75rem"></div>
 
 
+    <!-- SBU cards -->
+    <div class="sbu-sec-title"><i class="ti ti-layout-grid" style="font-size:13px"></i> SBU Breakdown <span style="font-size:10px;font-weight:400;color:#D1D5DB">— click to filter · multi-select</span></div>
+    <div class="cat-grid${ACT_SBU.size>0?' has-sel':''}" id="sbu-grid"></div>
+
     <!-- Drill-down button -->
     <button class="drill-btn${DRILL_OPEN?' open':''}" id="drill-btn" style="color:${cfg.acc};border-color:${cfg.acc}" onclick="toggleDrill()">
       <i class="ti ti-map-pin" style="font-size:14px"></i>
@@ -891,9 +895,7 @@ function renderContent(){
       </div>
     </div>
 
-    <!-- SBU cards -->
-    <div class="sbu-sec-title"><i class="ti ti-layout-grid" style="font-size:13px"></i> SBU Breakdown <span style="font-size:10px;font-weight:400;color:#D1D5DB">— click to filter · multi-select</span></div>
-    <div class="cat-grid${ACT_SBU.size>0?' has-sel':''}" id="sbu-grid"></div>
+
 
     <!-- State vertical bar chart -->
     <div class="state-section">
