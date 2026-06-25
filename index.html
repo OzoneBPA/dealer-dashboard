@@ -294,11 +294,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 /* Summary focus mode */
 #sum-trend-row.has-focus .sum-trend-card:not(.focused){display:none}
 #sum-trend-row.has-focus .sum-trend-card.focused .sum-trend-wrap{height:340px!important}
-
-/* Chart focus mode */
-.trend-card.chart-focused{grid-column:1/-1;transition:all .3s}
-.trend-card.chart-focused .trend-wrap{height:400px!important}
-.state-section.chart-focused .state-vchart-wrap-inner{height:500px!important}
 </style>
 </head>
 <body>
@@ -405,10 +400,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
       </div>
       <div class="trend-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
-          <div class="trend-title" style="margin-bottom:0">Monthly Billing Trend (₹ Lacs) — All Business</div>
-          <button id="btn-fullscreen-trend" title="Full screen" style="border:none;background:none;cursor:pointer;color:#9CA3AF;padding:2px 4px;border-radius:6px;font-size:16px;line-height:1" onmouseenter="this.style.color='#374151'" onmouseleave="this.style.color='#9CA3AF'">&#x26F6;</button>
-        </div>
+        <div class="trend-title">Monthly Billing Trend (₹ Lacs) — All Business</div>
         <div class="trend-wrap"><canvas id="trend-all" role="img" aria-label="All business billing trend"></canvas></div>
       </div>
     </div>
@@ -467,296 +459,6 @@ document.addEventListener('click', function(e){
   if(ic){ ic.textContent = isOpen ? '▶' : '▼'; ic.setAttribute('data-open', isOpen ? '0' : '1'); }
 });
 
-
-// Fullscreen chart via event delegation
-document.addEventListener('click', function(e){
-  var btn = e.target.closest('#btn-fullscreen-trend, #btn-fullscreen-state');
-  if(!btn) return;
-  var isTrend = btn.id === 'btn-fullscreen-trend';
-  openChartFullscreen(isTrend ? 'trend-all' : 'state-v', isTrend ? 'Monthly Billing Trend (₹ Lacs)' : 'Sale by State (₹ Lacs)');
-});
-
-function openChartFullscreen(chartKey, title){
-  var existing=document.getElementById('fs-overlay');
-  if(existing){existing.remove();if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}return;}
-
-  var overlay=document.createElement('div');
-  overlay.className='fs-overlay';overlay.id='fs-overlay';
-  overlay.addEventListener('click',function(e){
-    if(e.target===overlay){overlay.remove();if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}}
-  });
-  var box=document.createElement('div');box.className='fs-box';
-  var hdr=document.createElement('div');hdr.className='fs-header';
-  var ttl=document.createElement('span');ttl.className='fs-title';ttl.textContent=title;
-  var cls=document.createElement('button');cls.className='fs-close';cls.textContent='✕ Close';
-  cls.addEventListener('click',function(){overlay.remove();if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}});
-  hdr.appendChild(ttl);hdr.appendChild(cls);
-  var wrap=document.createElement('div');wrap.className='fs-canvas-wrap';
-  var canvas=document.createElement('canvas');canvas.id='fs-canvas';
-  wrap.appendChild(canvas);box.appendChild(hdr);box.appendChild(wrap);
-  overlay.appendChild(box);document.body.appendChild(overlay);
-
-  setTimeout(function(){
-    if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}
-    if(chartKey==='state-v'){
-      renderStateChart('fs-canvas', true);
-    } else {
-      buildTrendChart('fs-canvas', true);
-    }
-  },100);
-}
-
-
-function openChartFullscreen(chartKey, title){
-  var existing=document.getElementById('fs-overlay');
-  if(existing){
-    existing.remove();
-    if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}
-    return;
-  }
-
-  var srcChart=CHARTS[chartKey];
-  if(!srcChart)return;
-
-  // Build overlay
-  var overlay=document.createElement('div');
-  overlay.className='fs-overlay';overlay.id='fs-overlay';
-  overlay.addEventListener('click',function(e){
-    if(e.target===overlay){overlay.remove();if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}}
-  });
-
-  var box=document.createElement('div');box.className='fs-box';
-  var hdr=document.createElement('div');hdr.className='fs-header';
-  var ttl=document.createElement('span');ttl.className='fs-title';ttl.textContent=title;
-  var cls=document.createElement('button');cls.className='fs-close';cls.textContent='✕ Close';
-  cls.addEventListener('click',function(){overlay.remove();if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}});
-  hdr.appendChild(ttl);hdr.appendChild(cls);
-
-  var wrap=document.createElement('div');wrap.className='fs-canvas-wrap';
-  var canvas=document.createElement('canvas');
-  wrap.appendChild(canvas);box.appendChild(hdr);box.appendChild(wrap);
-  overlay.appendChild(box);document.body.appendChild(overlay);
-
-  setTimeout(function(){
-    if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}
-
-    var srcData=srcChart.config.data;
-    var srcType=srcChart.config.type;
-
-    // Custom afterDraw plugin that draws labels
-    var labelPlugin={
-      id:'fsLabels',
-      afterDraw:function(chart){
-        var ctx=chart.ctx;
-        ctx.save();
-        if(srcType==='bar'){
-          var meta=chart.getDatasetMeta(0);
-          var ds=chart.data.datasets[0];
-          meta.data.forEach(function(bar,i){
-            var val=ds.data[i];
-            if(!val&&val!==0)return;
-            var color=(typeof ds.borderColor==='string'?ds.borderColor:'#374151').replace(/[0-9a-f]{2}$/i,'');
-            ctx.font='bold 11px -apple-system,sans-serif';
-            ctx.fillStyle=color.length>=4?color:'#374151';
-            ctx.textAlign='center';
-            ctx.textBaseline='bottom';
-            ctx.fillText('₹'+parseFloat(val).toFixed(1),bar.x,bar.y-6);
-          });
-        } else if(srcType==='line'){
-          chart.data.datasets.forEach(function(ds,di){
-            var meta=chart.getDatasetMeta(di);
-            if(meta.hidden)return;
-            meta.data.forEach(function(pt,i){
-              var val=ds.data[i];
-              if(!val&&val!==0)return;
-              ctx.font='bold 10px -apple-system,sans-serif';
-              ctx.fillStyle=ds.borderColor||'#374151';
-              ctx.textAlign='center';
-              ctx.textBaseline='bottom';
-              ctx.fillText('₹'+parseFloat(val).toFixed(1),pt.x,pt.y-10);
-            });
-          });
-        }
-        ctx.restore();
-      }
-    };
-
-    // Build clean options
-    var opts={
-      responsive:true,
-      maintainAspectRatio:false,
-      animation:{duration:400},
-      layout:{padding:{top:60,bottom:8,left:8,right:8}},
-      plugins:{
-        legend:srcChart.config.options&&srcChart.config.options.plugins&&srcChart.config.options.plugins.legend
-          ?srcChart.config.options.plugins.legend
-          :{display:srcType==='line'}
-      },
-      scales:{}
-    };
-
-    // Copy scales but hide y-axis for bar
-    if(srcType==='bar'){
-      opts.scales={
-        x:{ticks:{font:{size:10},autoSkip:false,maxRotation:45},grid:{display:false},border:{display:false}},
-        y:{display:false}
-      };
-    } else {
-      opts.scales={
-        x:{ticks:{font:{size:11},autoSkip:false},grid:{display:false},border:{display:false}},
-        y:{display:false}
-      };
-    }
-
-    window._fsChart=null; // unused now - renderStateChart handles it
-      type:srcType,
-      data:JSON.parse(JSON.stringify(srcData)),
-      options:opts,
-      plugins:[labelPlugin]
-    });
-
-    // Draw labels after animation completes
-    setTimeout(function(){
-      if(!window._fsChart)return;
-      var chart=window._fsChart;
-      var ctx=chart.ctx;
-      ctx.save();
-      if(srcType==='bar'){
-        var meta=chart.getDatasetMeta(0);
-        var ds=chart.data.datasets[0];
-        meta.data.forEach(function(bar,i){
-          var val=ds.data[i];
-          if(!val)return;
-          ctx.font='bold 11px -apple-system,sans-serif';
-          ctx.fillStyle='#374151';
-          ctx.textAlign='center';
-          ctx.textBaseline='bottom';
-          ctx.fillText('₹'+parseFloat(val).toFixed(1),bar.x,bar.y-4);
-        });
-      } else {
-        chart.data.datasets.forEach(function(ds,di){
-          var meta=chart.getDatasetMeta(di);
-          if(meta.hidden)return;
-          meta.data.forEach(function(pt,i){
-            var val=ds.data[i];
-            if(!val)return;
-            ctx.font='bold 10px -apple-system,sans-serif';
-            ctx.fillStyle=ds.borderColor||'#374151';
-            ctx.textAlign='center';
-            ctx.textBaseline='bottom';
-            ctx.fillText('₹'+parseFloat(val).toFixed(1),pt.x,pt.y-10);
-          });
-        });
-      }
-      ctx.restore();
-    },600);
-  },100);
-}
-
-
-
-// Matrix expand/collapse all
-document.addEventListener('click', function(e){
-  var btn = e.target.closest('#btn-matrix-expand-all, #btn-matrix-collapse-all');
-  if(!btn) return;
-  var collapse = btn.id === 'btn-matrix-collapse-all';
-  ['HW','ERG','ST'].forEach(function(biz){
-    var grpId = 'smgrp-'+biz;
-    var rows = document.querySelectorAll('tr.'+grpId);
-    var ic = document.getElementById(grpId+'-ic');
-    rows.forEach(function(r){ r.style.display = collapse ? 'none' : ''; });
-    if(ic){ ic.textContent = collapse ? '▶' : '▼'; ic.setAttribute('data-open', collapse ? '0' : '1'); }
-  });
-});
-
-
-function renderStateChart(canvasId, isFullscreen){
-  var d=window._stateD; var cfg=window._stateCfg;
-  if(!d||!d.states||!d.states.length)return;
-  const k=isFullscreen?'state-v-fs':'state-v';
-    if(CHARTS[k]){CHARTS[k].destroy();delete CHARTS[k]}
-    const canvas=document.getElementById(canvasId);
-    if(!canvas||!d.states.length)return;
-    CHARTS[k]=new Chart(canvas,{
-      type:'bar',
-      data:{
-        labels:d.states.map(s=>s.name),
-        datasets:[{
-          label:'Sale (₹ L)',
-          data:d.states.map(s=>s.bv),
-          backgroundColor:cfg.acc+'BB',
-          borderColor:cfg.acc,
-          borderWidth:1.5,
-          borderRadius:6,
-          borderSkipped:false,
-          barPercentage:0.6,
-          categoryPercentage:0.7
-        }]
-      },
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        plugins:{
-          legend:{display:false},
-          tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+' L  |  '+d.states[v.dataIndex].dd+' DD'}}
-        },
-        scales:{
-          x:{ticks:{font:{size:10},color:'#6B7280',autoSkip:false,maxRotation:45,minRotation:30},grid:{display:false},border:{display:false}},
-          y:{display:false,grid:{display:false},border:{display:false}}
-        },
-        layout:{padding:{top:60,left:4,right:4,bottom:4}}
-      },
-      plugins:[{
-        id:'barTopLabels',
-        afterDatasetsDraw(chart){
-          const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);const ds=chart.data.datasets[0];
-          ctx.save();
-          meta.data.forEach((bar,i)=>{
-            const s=d.states[i];
-            ctx.font='700 10px -apple-system,sans-serif';
-            ctx.fillStyle=cfg.acc;ctx.textAlign='center';
-            ctx.fillText('₹'+s.bv.toFixed(2),bar.x,bar.y-20);
-            ctx.font='500 9px -apple-system,sans-serif';
-            ctx.fillStyle='#6B7280';
-            ctx.fillText(s.dd+' DD',bar.x,bar.y-9);
-          });
-          ctx.restore();
-        }
-      }]
-    });
-}
-
-
-function toggleChartFocus(which){
-  if(which==='trend'){
-    var card=document.getElementById('trend-card');
-    var wrap=document.getElementById('trend-wrap-el');
-    var btn=document.getElementById('btn-fullscreen-trend');
-    var focused=card&&card.classList.contains('chart-focused');
-    if(card)card.classList.toggle('chart-focused');
-    if(wrap)wrap.style.height=focused?'':'400px';
-    if(btn)btn.title=focused?'Expand':'Collapse';
-    if(btn)btn.style.color=focused?'#9CA3AF':'#374151';
-    setTimeout(function(){if(CHARTS['trend-all'])CHARTS['trend-all'].resize();},350);
-  } else {
-    var wrap2=document.getElementById('state-vchart-wrap');
-    var btn2=document.getElementById('btn-fullscreen-state');
-    var sec=document.querySelector('.state-section');
-    var focused2=sec&&sec.classList.contains('chart-focused');
-    if(sec)sec.classList.toggle('chart-focused');
-    if(wrap2)wrap2.style.height=focused2?'320px':'520px';
-    if(btn2)btn2.style.color=focused2?'#9CA3AF':'#374151';
-    setTimeout(function(){if(CHARTS['state-v'])CHARTS['state-v'].resize();},350);
-  }
-}
-
-// Chart focus buttons
-document.addEventListener('click', function(e){
-  var btn=e.target.closest('#btn-fullscreen-trend, #btn-fullscreen-state');
-  if(!btn)return;
-  toggleChartFocus(btn.id==='btn-fullscreen-trend'?'trend':'state');
-});
-
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js">
 function sumFocus(biz){
@@ -794,168 +496,6 @@ document.addEventListener('click', function(e){
   var isOpen = ic && ic.getAttribute('data-open') !== '0';
   rows.forEach(function(r){ r.style.display = isOpen ? 'none' : ''; });
   if(ic){ ic.textContent = isOpen ? '▶' : '▼'; ic.setAttribute('data-open', isOpen ? '0' : '1'); }
-});
-
-
-// Fullscreen chart via event delegation
-document.addEventListener('click', function(e){
-  var btn = e.target.closest('#btn-fullscreen-trend, #btn-fullscreen-state');
-  if(!btn) return;
-  var isTrend = btn.id === 'btn-fullscreen-trend';
-  openChartFullscreen(isTrend ? 'trend-all' : 'state-v', isTrend ? 'Monthly Billing Trend (₹ Lacs)' : 'Sale by State (₹ Lacs)');
-});
-
-function openChartFullscreen(chartKey, title){
-  var existing = document.getElementById('fs-overlay');
-  if(existing){ existing.remove(); if(window._fsChart){try{window._fsChart.destroy();}catch(e){}} return; }
-
-  var srcChart = CHARTS[chartKey];
-  if(!srcChart) return;
-
-  var overlay = document.createElement('div');
-  overlay.className = 'fs-overlay';
-  overlay.id = 'fs-overlay';
-  overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.remove(); });
-
-  var box = document.createElement('div');
-  box.className = 'fs-box';
-
-  var hdr = document.createElement('div');
-  hdr.className = 'fs-header';
-
-  var ttl = document.createElement('span');
-  ttl.className = 'fs-title';
-  ttl.textContent = title;
-
-  var cls = document.createElement('button');
-  cls.className = 'fs-close';
-  cls.textContent = '✕ Close';
-  cls.addEventListener('click', function(){ overlay.remove(); if(window._fsChart){try{window._fsChart.destroy();}catch(e){}} });
-
-  hdr.appendChild(ttl);
-  hdr.appendChild(cls);
-
-  var wrap = document.createElement('div');
-  wrap.className = 'fs-canvas-wrap';
-
-  var canvas = document.createElement('canvas');
-  wrap.appendChild(canvas);
-  box.appendChild(hdr);
-  box.appendChild(wrap);
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
-
-  setTimeout(function(){
-    if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}
-    window._fsChart = new Chart(canvas, {
-      type: srcChart.config.type,
-      data: JSON.parse(JSON.stringify(srcChart.config.data)),
-      options: Object.assign({}, srcChart.config.options, {responsive:true, maintainAspectRatio:false})
-    });
-  }, 50);
-}
-
-
-// Matrix expand/collapse all
-document.addEventListener('click', function(e){
-  var btn = e.target.closest('#btn-matrix-expand-all, #btn-matrix-collapse-all');
-  if(!btn) return;
-  var collapse = btn.id === 'btn-matrix-collapse-all';
-  ['HW','ERG','ST'].forEach(function(biz){
-    var grpId = 'smgrp-'+biz;
-    var rows = document.querySelectorAll('tr.'+grpId);
-    var ic = document.getElementById(grpId+'-ic');
-    rows.forEach(function(r){ r.style.display = collapse ? 'none' : ''; });
-    if(ic){ ic.textContent = collapse ? '▶' : '▼'; ic.setAttribute('data-open', collapse ? '0' : '1'); }
-  });
-});
-
-
-function renderStateChart(canvasId, isFullscreen){
-  var d=window._stateD; var cfg=window._stateCfg;
-  if(!d||!d.states||!d.states.length)return;
-  const k=isFullscreen?'state-v-fs':'state-v';
-    if(CHARTS[k]){CHARTS[k].destroy();delete CHARTS[k]}
-    const canvas=document.getElementById(canvasId);
-    if(!canvas||!d.states.length)return;
-    CHARTS[k]=new Chart(canvas,{
-      type:'bar',
-      data:{
-        labels:d.states.map(s=>s.name),
-        datasets:[{
-          label:'Sale (₹ L)',
-          data:d.states.map(s=>s.bv),
-          backgroundColor:cfg.acc+'BB',
-          borderColor:cfg.acc,
-          borderWidth:1.5,
-          borderRadius:6,
-          borderSkipped:false,
-          barPercentage:0.6,
-          categoryPercentage:0.7
-        }]
-      },
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        plugins:{
-          legend:{display:false},
-          tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+' L  |  '+d.states[v.dataIndex].dd+' DD'}}
-        },
-        scales:{
-          x:{ticks:{font:{size:10},color:'#6B7280',autoSkip:false,maxRotation:45,minRotation:30},grid:{display:false},border:{display:false}},
-          y:{display:false,grid:{display:false},border:{display:false}}
-        },
-        layout:{padding:{top:60,left:4,right:4,bottom:4}}
-      },
-      plugins:[{
-        id:'barTopLabels',
-        afterDatasetsDraw(chart){
-          const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);const ds=chart.data.datasets[0];
-          ctx.save();
-          meta.data.forEach((bar,i)=>{
-            const s=d.states[i];
-            ctx.font='700 10px -apple-system,sans-serif';
-            ctx.fillStyle=cfg.acc;ctx.textAlign='center';
-            ctx.fillText('₹'+s.bv.toFixed(2),bar.x,bar.y-20);
-            ctx.font='500 9px -apple-system,sans-serif';
-            ctx.fillStyle='#6B7280';
-            ctx.fillText(s.dd+' DD',bar.x,bar.y-9);
-          });
-          ctx.restore();
-        }
-      }]
-    });
-}
-
-
-function toggleChartFocus(which){
-  if(which==='trend'){
-    var card=document.getElementById('trend-card');
-    var wrap=document.getElementById('trend-wrap-el');
-    var btn=document.getElementById('btn-fullscreen-trend');
-    var focused=card&&card.classList.contains('chart-focused');
-    if(card)card.classList.toggle('chart-focused');
-    if(wrap)wrap.style.height=focused?'':'400px';
-    if(btn)btn.title=focused?'Expand':'Collapse';
-    if(btn)btn.style.color=focused?'#9CA3AF':'#374151';
-    setTimeout(function(){if(CHARTS['trend-all'])CHARTS['trend-all'].resize();},350);
-  } else {
-    var wrap2=document.getElementById('state-vchart-wrap');
-    var btn2=document.getElementById('btn-fullscreen-state');
-    var sec=document.querySelector('.state-section');
-    var focused2=sec&&sec.classList.contains('chart-focused');
-    if(sec)sec.classList.toggle('chart-focused');
-    if(wrap2)wrap2.style.height=focused2?'320px':'520px';
-    if(btn2)btn2.style.color=focused2?'#9CA3AF':'#374151';
-    setTimeout(function(){if(CHARTS['state-v'])CHARTS['state-v'].resize();},350);
-  }
-}
-
-// Chart focus buttons
-document.addEventListener('click', function(e){
-  var btn=e.target.closest('#btn-fullscreen-trend, #btn-fullscreen-state');
-  if(!btn)return;
-  toggleChartFocus(btn.id==='btn-fullscreen-trend'?'trend':'state');
 });
 
 </script>
@@ -1398,12 +938,8 @@ function renderContent(){
 
     <!-- Business x State Matrix -->
     <div style="margin-bottom:1rem;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)">
-      <div style="padding:10px 14px;font-size:11px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between">
-        <span style="display:flex;align-items:center;gap:6px"><i class="ti ti-table" style="font-size:13px"></i> Business &times; Customer State</span>
-        <span style="display:flex;align-items:center;gap:8px">
-          <button id="btn-matrix-expand-all" title="Expand all" style="border:1px solid #D1D5DB;background:#fff;cursor:pointer;color:#6B7280;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600">&#9660; Expand All</button>
-          <button id="btn-matrix-collapse-all" title="Collapse all" style="border:1px solid #D1D5DB;background:#fff;cursor:pointer;color:#6B7280;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600">&#9654; Collapse All</button>
-        </span>
+      <div style="padding:10px 14px;font-size:11px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:6px">
+        <i class="ti ti-table" style="font-size:13px"></i> Business &times; Customer State
       </div>
       <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
         <table style="width:100%;border-collapse:collapse;font-size:12px">
@@ -1424,10 +960,7 @@ function renderContent(){
 
     <!-- State vertical bar chart -->
     <div class="state-section">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
-        <div class="state-title" style="margin-bottom:0"><i class="ti ti-map" style="font-size:13px;color:${cfg.acc}"></i> Sale by State (₹ Lacs)</div>
-        <button id="btn-fullscreen-state" title="Full screen" style="border:none;background:none;cursor:pointer;color:#9CA3AF;padding:2px 4px;border-radius:6px;font-size:16px;line-height:1">&#x26F6;</button>
-      </div>
+      <div class="state-title"><i class="ti ti-map" style="font-size:13px;color:${cfg.acc}"></i> Sale by State (₹ Lacs)</div>
       <div id="state-vchart-wrap" style="position:relative;height:320px;width:100%">
         <canvas id="state-vchart" role="img" aria-label="Sale by state vertical bar chart"></canvas>
       </div>
@@ -1440,8 +973,59 @@ function renderContent(){
   renderSBUCards(d,cfg);
 
   // Render state vertical bar chart
-  window._stateD=d; window._stateCfg=cfg;
-  setTimeout(()=>{ renderStateChart('state-vchart',false); },60);
+  setTimeout(()=>{
+    const k='state-v';
+    if(CHARTS[k]){CHARTS[k].destroy();delete CHARTS[k]}
+    const canvas=document.getElementById('state-vchart');
+    if(!canvas||!d.states.length)return;
+    CHARTS[k]=new Chart(canvas,{
+      type:'bar',
+      data:{
+        labels:d.states.map(s=>s.name),
+        datasets:[{
+          label:'Sale (₹ L)',
+          data:d.states.map(s=>s.bv),
+          backgroundColor:cfg.acc+'BB',
+          borderColor:cfg.acc,
+          borderWidth:1.5,
+          borderRadius:6,
+          borderSkipped:false,
+          barPercentage:0.6,
+          categoryPercentage:0.7
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+' L  |  '+d.states[v.dataIndex].dd+' DD'}}
+        },
+        scales:{
+          x:{ticks:{font:{size:10},color:'#6B7280',autoSkip:false,maxRotation:45,minRotation:30},grid:{display:false},border:{display:false}},
+          y:{display:false,grid:{display:false},border:{display:false}}
+        },
+        layout:{padding:{top:48,left:4,right:4,bottom:4}}
+      },
+      plugins:[{
+        id:'barTopLabels',
+        afterDatasetsDraw(chart){
+          const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);const ds=chart.data.datasets[0];
+          ctx.save();
+          meta.data.forEach((bar,i)=>{
+            const s=d.states[i];
+            ctx.font='700 10px -apple-system,sans-serif';
+            ctx.fillStyle=cfg.acc;ctx.textAlign='center';
+            ctx.fillText('₹'+s.bv.toFixed(2),bar.x,bar.y-16);
+            ctx.font='500 9px -apple-system,sans-serif';
+            ctx.fillStyle='#6B7280';
+            ctx.fillText(s.dd+' DD',bar.x,bar.y-5);
+          });
+          ctx.restore();
+        }
+      }]
+    });
+  },60);
 }
 
 function renderFilterChips(){
@@ -1746,168 +1330,6 @@ document.addEventListener('click', function(e){
   var isOpen = ic && ic.getAttribute('data-open') !== '0';
   rows.forEach(function(r){ r.style.display = isOpen ? 'none' : ''; });
   if(ic){ ic.textContent = isOpen ? '▶' : '▼'; ic.setAttribute('data-open', isOpen ? '0' : '1'); }
-});
-
-
-// Fullscreen chart via event delegation
-document.addEventListener('click', function(e){
-  var btn = e.target.closest('#btn-fullscreen-trend, #btn-fullscreen-state');
-  if(!btn) return;
-  var isTrend = btn.id === 'btn-fullscreen-trend';
-  openChartFullscreen(isTrend ? 'trend-all' : 'state-v', isTrend ? 'Monthly Billing Trend (₹ Lacs)' : 'Sale by State (₹ Lacs)');
-});
-
-function openChartFullscreen(chartKey, title){
-  var existing = document.getElementById('fs-overlay');
-  if(existing){ existing.remove(); if(window._fsChart){try{window._fsChart.destroy();}catch(e){}} return; }
-
-  var srcChart = CHARTS[chartKey];
-  if(!srcChart) return;
-
-  var overlay = document.createElement('div');
-  overlay.className = 'fs-overlay';
-  overlay.id = 'fs-overlay';
-  overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.remove(); });
-
-  var box = document.createElement('div');
-  box.className = 'fs-box';
-
-  var hdr = document.createElement('div');
-  hdr.className = 'fs-header';
-
-  var ttl = document.createElement('span');
-  ttl.className = 'fs-title';
-  ttl.textContent = title;
-
-  var cls = document.createElement('button');
-  cls.className = 'fs-close';
-  cls.textContent = '✕ Close';
-  cls.addEventListener('click', function(){ overlay.remove(); if(window._fsChart){try{window._fsChart.destroy();}catch(e){}} });
-
-  hdr.appendChild(ttl);
-  hdr.appendChild(cls);
-
-  var wrap = document.createElement('div');
-  wrap.className = 'fs-canvas-wrap';
-
-  var canvas = document.createElement('canvas');
-  wrap.appendChild(canvas);
-  box.appendChild(hdr);
-  box.appendChild(wrap);
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
-
-  setTimeout(function(){
-    if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}
-    window._fsChart = new Chart(canvas, {
-      type: srcChart.config.type,
-      data: JSON.parse(JSON.stringify(srcChart.config.data)),
-      options: Object.assign({}, srcChart.config.options, {responsive:true, maintainAspectRatio:false})
-    });
-  }, 50);
-}
-
-
-// Matrix expand/collapse all
-document.addEventListener('click', function(e){
-  var btn = e.target.closest('#btn-matrix-expand-all, #btn-matrix-collapse-all');
-  if(!btn) return;
-  var collapse = btn.id === 'btn-matrix-collapse-all';
-  ['HW','ERG','ST'].forEach(function(biz){
-    var grpId = 'smgrp-'+biz;
-    var rows = document.querySelectorAll('tr.'+grpId);
-    var ic = document.getElementById(grpId+'-ic');
-    rows.forEach(function(r){ r.style.display = collapse ? 'none' : ''; });
-    if(ic){ ic.textContent = collapse ? '▶' : '▼'; ic.setAttribute('data-open', collapse ? '0' : '1'); }
-  });
-});
-
-
-function renderStateChart(canvasId, isFullscreen){
-  var d=window._stateD; var cfg=window._stateCfg;
-  if(!d||!d.states||!d.states.length)return;
-  const k=isFullscreen?'state-v-fs':'state-v';
-    if(CHARTS[k]){CHARTS[k].destroy();delete CHARTS[k]}
-    const canvas=document.getElementById(canvasId);
-    if(!canvas||!d.states.length)return;
-    CHARTS[k]=new Chart(canvas,{
-      type:'bar',
-      data:{
-        labels:d.states.map(s=>s.name),
-        datasets:[{
-          label:'Sale (₹ L)',
-          data:d.states.map(s=>s.bv),
-          backgroundColor:cfg.acc+'BB',
-          borderColor:cfg.acc,
-          borderWidth:1.5,
-          borderRadius:6,
-          borderSkipped:false,
-          barPercentage:0.6,
-          categoryPercentage:0.7
-        }]
-      },
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        plugins:{
-          legend:{display:false},
-          tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+' L  |  '+d.states[v.dataIndex].dd+' DD'}}
-        },
-        scales:{
-          x:{ticks:{font:{size:10},color:'#6B7280',autoSkip:false,maxRotation:45,minRotation:30},grid:{display:false},border:{display:false}},
-          y:{display:false,grid:{display:false},border:{display:false}}
-        },
-        layout:{padding:{top:60,left:4,right:4,bottom:4}}
-      },
-      plugins:[{
-        id:'barTopLabels',
-        afterDatasetsDraw(chart){
-          const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);const ds=chart.data.datasets[0];
-          ctx.save();
-          meta.data.forEach((bar,i)=>{
-            const s=d.states[i];
-            ctx.font='700 10px -apple-system,sans-serif';
-            ctx.fillStyle=cfg.acc;ctx.textAlign='center';
-            ctx.fillText('₹'+s.bv.toFixed(2),bar.x,bar.y-20);
-            ctx.font='500 9px -apple-system,sans-serif';
-            ctx.fillStyle='#6B7280';
-            ctx.fillText(s.dd+' DD',bar.x,bar.y-9);
-          });
-          ctx.restore();
-        }
-      }]
-    });
-}
-
-
-function toggleChartFocus(which){
-  if(which==='trend'){
-    var card=document.getElementById('trend-card');
-    var wrap=document.getElementById('trend-wrap-el');
-    var btn=document.getElementById('btn-fullscreen-trend');
-    var focused=card&&card.classList.contains('chart-focused');
-    if(card)card.classList.toggle('chart-focused');
-    if(wrap)wrap.style.height=focused?'':'400px';
-    if(btn)btn.title=focused?'Expand':'Collapse';
-    if(btn)btn.style.color=focused?'#9CA3AF':'#374151';
-    setTimeout(function(){if(CHARTS['trend-all'])CHARTS['trend-all'].resize();},350);
-  } else {
-    var wrap2=document.getElementById('state-vchart-wrap');
-    var btn2=document.getElementById('btn-fullscreen-state');
-    var sec=document.querySelector('.state-section');
-    var focused2=sec&&sec.classList.contains('chart-focused');
-    if(sec)sec.classList.toggle('chart-focused');
-    if(wrap2)wrap2.style.height=focused2?'320px':'520px';
-    if(btn2)btn2.style.color=focused2?'#9CA3AF':'#374151';
-    setTimeout(function(){if(CHARTS['state-v'])CHARTS['state-v'].resize();},350);
-  }
-}
-
-// Chart focus buttons
-document.addEventListener('click', function(e){
-  var btn=e.target.closest('#btn-fullscreen-trend, #btn-fullscreen-state');
-  if(!btn)return;
-  toggleChartFocus(btn.id==='btn-fullscreen-trend'?'trend':'state');
 });
 
 </script>
