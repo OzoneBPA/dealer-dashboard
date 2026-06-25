@@ -529,22 +529,19 @@ function openChartFullscreen(chartKey, title){
             if(chart.config.type==='bar'){
               // Bar chart - label above bar
               ctx.font='700 11px -apple-system,sans-serif';
-              ctx.fillStyle=ds.borderColor||ds.backgroundColor||'#374151';
+              // Use actual bar color (backgroundColor may be string like '#EA580CBB')
+              var barColor=Array.isArray(ds.backgroundColor)?ds.backgroundColor[i]:ds.backgroundColor;
+              ctx.fillStyle=(barColor||'#374151').toString().slice(0,7); // strip alpha
               ctx.textAlign='center';
               ctx.textBaseline='bottom';
-              ctx.fillText('₹'+parseFloat(val).toFixed(2), x, y-18);
-              // DD count from label if available
-              if(chart.data.labels&&chart.data.labels[i]){
-                var lbl=chart.data.labels[i];
-                // show state name only in fullscreen (it's already on x-axis)
-              }
+              ctx.fillText('₹'+parseFloat(val).toFixed(1), x, y-8);
             } else {
               // Line chart - label above point
               ctx.font='700 10px -apple-system,sans-serif';
               ctx.fillStyle=ds.borderColor||'#374151';
               ctx.textAlign='center';
               ctx.textBaseline='bottom';
-              var formatted=typeof val==='number'?'₹'+val.toFixed(2):'₹'+val;
+              var formatted=typeof val==='number'?'₹'+val.toFixed(1):'₹'+val;
               ctx.fillText(formatted, x, y-10);
             }
           });
