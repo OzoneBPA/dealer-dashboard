@@ -1285,13 +1285,7 @@ function renderSummary(){
       });
     });
   },50);
-  const allRows=[];
-  BIZ_LIST.forEach(biz=>{
-    const d=analyseFor(biz);let ytdRunBV=0;const ytdRunA=new Set();
-    d.monthTrend.forEach(m=>{ytdRunBV+=m.bv;getFilteredRows(biz).filter(r=>r['Months']===m.month).forEach(r=>{if(r['Customer Code'])ytdRunA.add(r['Customer Code'])});allRows.push({biz,month:m.month,bv:m.bv,active:m.active,ytdBV:ytdRunBV,ytdActive:ytdRunA.size})});
-  });
-  document.getElementById('sum-table-body').innerHTML=allRows.map(r=>`<tr><td><span class="sum-biz-badge biz-${r.biz.toLowerCase()}">${r.biz}</span></td><td>${r.month}</td><td>₹${fmt(r.bv)}</td><td>${fmtInt(r.active)}</td><td>₹${fmt(r.ytdBV)}</td><td>${fmtInt(r.ytdActive)}</td></tr>`).join('');
-}
+
 
 // ── DROPDOWN SYSTEM ────────────────────────────────────────────
 function buildDD_list(key,query){
