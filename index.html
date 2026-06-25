@@ -429,7 +429,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 // ── STATE ──────────────────────────────────────────────────────
 let RAW=[], ACTIVE_FY='', ALL_FYS=[];
 let CURRENT_BIZ='HW', CURRENT_PAGE='detail';
-let DRILL_OPEN=false;
 const CHARTS={};
 const ACT_SBU=new Set();
 const MONTH_ORDER=['April','May','June','July','August','September','October','November','December','January','February','March'];
@@ -831,7 +830,6 @@ function renderVTabs(){
 
 function switchBiz(biz){
   CURRENT_BIZ=biz;
-  DRILL_OPEN=false;
   ACT_SBU.clear();renderSBUPills();
   // refresh subgroup/customer — ALL = all businesses, otherwise scope to biz
   const fyBizRows=biz==='ALL'
@@ -861,37 +859,6 @@ function renderContent(){
     <!-- SBU cards -->
     <div class="sbu-sec-title"><i class="ti ti-layout-grid" style="font-size:13px"></i> SBU Breakdown <span style="font-size:10px;font-weight:400;color:#D1D5DB">— click to filter · multi-select</span></div>
     <div class="cat-grid${ACT_SBU.size>0?' has-sel':''}" id="sbu-grid"></div>
-
-    <!-- Drill-down button -->
-    <button class="drill-btn${DRILL_OPEN?' open':''}" id="drill-btn" style="color:${cfg.acc};border-color:${cfg.acc}" onclick="toggleDrill()">
-      <i class="ti ti-map-pin" style="font-size:14px"></i>
-      Customer State Drill-Down
-      <i class="ti ti-chevron-down" style="font-size:13px"></i>
-    </button>
-
-    <!-- Drill-down state table -->
-    <div id="drill-section" style="display:${DRILL_OPEN?'block':'none'}">
-      <div class="drill-section">
-        <div class="drill-table-title" style="font-size:11px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:.8rem;display:flex;align-items:center;gap:6px">
-          <i class="ti ti-map-pin" style="font-size:13px;color:${cfg.acc}"></i> ${CURRENT_BIZ==='ALL'?'All Businesses':CURRENT_BIZ} — Customer State Level Detail
-        </div>
-        <div style="overflow-x:auto">
-          <table class="drill-table">
-            <thead><tr>
-              <th>State</th>
-              <th>Total DD</th>
-              <th>YTD Active</th>
-              <th>MTD Active</th>
-              <th>Total Billed (₹ L)</th>
-              <th>YTD Billed (₹ L)</th>
-              <th>MTD Billed (₹ L)</th>
-              <th>Active %</th>
-            </tr></thead>
-            <tbody>${renderStateTableRows(d)}</tbody>
-          </table>
-        </div>
-      </div>
-    </div>
 
 
 
@@ -965,51 +932,6 @@ function renderContent(){
   },60);
 }
 
-function renderStateTableRows(d){
-  // Get state-level data including mtd
-  const biz=CURRENT_BIZ; // may be 'ALL'
-  const rows=getFilteredRows(biz);
-  const mtdM=getMTD(rows);
-  const mtdRows=rows.filter(r=>r['Months']===mtdM);
-  const bvSum=a=>a.reduce((s,r)=>s+(parseFloat(r['BV'])||0),0);
-  const uniq=a=>[...new Set(a.map(r=>r['Customer Code']).filter(Boolean))].length;
-
-  const stateMap={};
-  rows.forEach(r=>{
-    const st=r['Customer State']||'Other';
-    if(!stateMap[st])stateMap[st]={ytdBV:0,mtdBV:0,ytdD:new Set(),mtdD:new Set(),allD:new Set()};
-    stateMap[st].ytdBV+=parseFloat(r['BV'])||0;
-    if(r['Customer Code']){stateMap[st].ytdD.add(r['Customer Code']);stateMap[st].allD.add(r['Customer Code'])}
-  });
-  mtdRows.forEach(r=>{
-    const st=r['Customer State']||'Other';
-    if(!stateMap[st])stateMap[st]={ytdBV:0,mtdBV:0,ytdD:new Set(),mtdD:new Set(),allD:new Set()};
-    stateMap[st].mtdBV+=parseFloat(r['BV'])||0;
-    if(r['Customer Code'])stateMap[st].mtdD.add(r['Customer Code']);
-  });
-
-  // All-time DD per state for this biz (ALL = across all businesses)
-  const allBase=biz==='ALL'?RAW:RAW.filter(r=>r['Business']===biz);
-  const allStateDD={};
-  allBase.forEach(r=>{const st=r['Customer State']||'Other';if(!allStateDD[st])allStateDD[st]=new Set();if(r['Customer Code'])allStateDD[st].add(r['Customer Code'])});
-
-  return Object.entries(stateMap).sort((a,b)=>b[1].ytdBV-a[1].ytdBV).map(([st,v])=>{
-    const totalDD=(allStateDD[st]||new Set()).size;
-    const ytdA=v.ytdD.size, mtdA=v.mtdD.size;
-    const pct=totalDD>0?Math.round(ytdA/totalDD*100):0;
-    return`<tr>
-      <td class="td-state">${st}</td>
-      <td class="td-num">${fmtInt(totalDD)}</td>
-      <td class="td-num">${fmtInt(ytdA)}</td>
-      <td class="td-num">${fmtInt(mtdA)}</td>
-      <td class="td-num">₹${fmt(v.ytdBV)}</td>
-      <td class="td-num">₹${fmt(v.ytdBV)}</td>
-      <td class="td-num">₹${fmt(v.mtdBV)}</td>
-      <td class="td-num">${pct}%</td>
-    </tr>`;
-  }).join('');
-}
-
 function renderFilterChips(){
   const el=document.getElementById('filter-chips-row');
   if(!el)return;
@@ -1063,12 +985,6 @@ function makeChip(label,icon='ti-filter',textColor='#4338CA',bg='#EEF2FF',border
   return sp;
 }
 function resetFilter(key){FS[key].act=[...FS[key].all];FS[key].pend=[...FS[key].all];updateDDBadge(key);if(CURRENT_PAGE==='detail')renderDetail();else renderSummary()}
-
-function toggleDrill(){
-  DRILL_OPEN=!DRILL_OPEN;
-  document.getElementById('drill-btn').classList.toggle('open',DRILL_OPEN);
-  document.getElementById('drill-section').style.display=DRILL_OPEN?'block':'none';
-}
 
 function renderSBUCards(d,cfg){
   const sbuTotal=d.sbuTotal||1;
