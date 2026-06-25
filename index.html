@@ -180,9 +180,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .sum-stat-lbl{font-size:11px;opacity:.75;font-weight:500}
 .sum-stat-val{font-size:14px;font-weight:800}
 .sum-trend-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:1.2rem}
-.sum-trend-card{background:#fff;border-radius:16px;padding:1.1rem;border:1px solid #F3F4F6;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-.sum-trend-title{font-size:12px;font-weight:700;color:#374151;margin-bottom:.5rem}
-.sum-trend-wrap{position:relative;height:120px}
+
 .sum-table-wrap{background:#fff;border-radius:16px;padding:1.1rem;border:1px solid #F3F4F6;overflow-x:auto;box-shadow:0 1px 4px rgba(0,0,0,.05)}
 .sum-table{width:100%;border-collapse:collapse;font-size:12px}
 .sum-table th{background:#F9FAFB;color:#6B7280;font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;text-align:left;border-bottom:1px solid #E5E7EB;font-weight:700}
@@ -290,10 +288,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   .drill-btn{font-size:11px;padding:6px 12px}
 }
 
-
-/* Summary focus mode */
-#sum-trend-row.has-focus .sum-trend-card:not(.focused){display:none}
-#sum-trend-row.has-focus .sum-trend-card.focused .sum-trend-wrap{height:340px!important}
 </style>
 </head>
 <body>
@@ -416,36 +410,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div id="summary-page">
     <div class="summary-header"><i class="ti ti-table" style="font-size:14px"></i> All Business Summary</div>
     <div class="summary-grid" id="sum-overview-cards"></div>
-    <div class="sum-trend-row" id="sum-trend-row"></div>
+    <div id="sum-matrix-wrap"></div>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
 
-function sumFocus(biz){
-  var row=document.getElementById('sum-trend-row');
-  var card=document.getElementById('stc-'+biz);
-  if(!row||!card)return;
-  var already=card.classList.contains('focused');
-  document.querySelectorAll('.sum-trend-card').forEach(function(c){
-    c.classList.remove('focused');
-    var b=c.querySelector('button');
-    if(b)b.textContent='⛶ Focus';
-  });
-  row.classList.remove('has-focus');
-  if(!already){
-    card.classList.add('focused');
-    row.classList.add('has-focus');
-    var btn=document.getElementById('sfb-'+biz);
-    if(btn)btn.textContent='✕ Exit';
-  }
-  setTimeout(function(){
-    BIZ_LIST.forEach(function(b){
-      if(window.sumCharts&&window.sumCharts[b])try{window.sumCharts[b].resize();}catch(e){}
-    });
-  },150);
-}
-
 
 // Matrix group collapse via event delegation
 document.addEventListener('click', function(e){
@@ -458,32 +428,57 @@ document.addEventListener('click', function(e){
   rows.forEach(function(r){ r.style.display = isOpen ? 'none' : ''; });
   if(ic){ ic.textContent = isOpen ? '▶' : '▼'; ic.setAttribute('data-open', isOpen ? '0' : '1'); }
 });
+
+
+function buildSumMatrix(biz){
+  var cfg=BIZ_CFG[biz];
+  var rows=getFilteredRows(biz);
+  var mtdM=getMTD(rows);
+  var fyRows=RAW.filter(function(r){return r['FY']===ACTIVE_FY&&r['Business']===biz;});
+  var mSet={};fyRows.forEach(function(r){if(r['Months'])mSet[r['Months']]=1;});
+  var months=MONTH_ORDER.filter(function(m){return mSet[m];});
+  var ytdDD={},ytdBV=0;
+  var mData=months.map(function(m){
+    var mr=rows.filter(function(r){return r['Months']===m;});
+    var mtdDD={};
+    mr.forEach(function(r){if(r['Customer Code']){mtdDD[r['Customer Code']]=1;ytdDD[r['Customer Code']]=1;}});
+    var bv=mr.reduce(function(s,r){return s+(parseFloat(r['BV'])||0);},0);
+    ytdBV+=bv;
+    return{month:m,mtdA:Object.keys(mtdDD).length,ytdA:Object.keys(ytdDD).length,bv:bv,ytdBV:ytdBV};
+  });
+  var TH='padding:7px 12px;font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid #E5E7EB;text-align:right;white-space:nowrap;';
+  var TD='padding:7px 12px;font-size:12px;border-bottom:1px solid #F3F4F6;text-align:right;';
+  var TDL='padding:7px 12px;font-size:12px;border-bottom:1px solid #F3F4F6;font-weight:600;color:#111827;';
+  var rows_html=mData.map(function(m){
+    var isMTD=m.month===mtdM;
+    var rowBg=isMTD?'background:#FFF7ED;':'';
+    return '<tr style="'+rowBg+'">'
+      +'<td style="'+TDL+(isMTD?'color:'+cfg.acc+';':'')+'">'+(isMTD?'&#9658; ':'')+m.month+'</td>'
+      +'<td style="'+TD+'color:'+cfg.acc+';font-weight:700">'+fmtInt(m.mtdA)+'</td>'
+      +'<td style="'+TD+'">'+fmtInt(m.ytdA)+'</td>'
+      +'<td style="'+TD+'">&#8377;'+fmt(m.bv)+'</td>'
+      +'<td style="'+TD+'">&#8377;'+fmt(m.ytdBV)+'</td>'
+      +'</tr>';
+  }).join('');
+  return '<div style="margin-bottom:1.2rem;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)">'
+    +'<div style="padding:10px 14px;background:'+cfg.acc+'18;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:8px">'
+    +'<span style="width:10px;height:10px;border-radius:50%;background:'+cfg.acc+';display:inline-block"></span>'
+    +'<span style="font-size:13px;font-weight:700;color:'+cfg.acc+'">'+biz+' — Month-wise Summary</span>'
+    +'</div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr style="background:#F9FAFB">'
+    +'<th style="'+TH+'text-align:left;white-space:nowrap">Month</th>'
+    +'<th style="'+TH+'">MTD Active DD</th>'
+    +'<th style="'+TH+'">YTD Active DD</th>'
+    +'<th style="'+TH+'">MTD Billed (&#8377; L)</th>'
+    +'<th style="'+TH+'">YTD Billed (&#8377; L)</th>'
+    +'</tr></thead>'
+    +'<tbody>'+rows_html+'</tbody>'
+    +'</table></div></div>';
+}
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js">
-function sumFocus(biz){
-  var row=document.getElementById('sum-trend-row');
-  var card=document.getElementById('stc-'+biz);
-  if(!row||!card)return;
-  var already=card.classList.contains('focused');
-  document.querySelectorAll('.sum-trend-card').forEach(function(c){
-    c.classList.remove('focused');
-    var b=c.querySelector('button');
-    if(b)b.textContent='⛶ Focus';
-  });
-  row.classList.remove('has-focus');
-  if(!already){
-    card.classList.add('focused');
-    row.classList.add('has-focus');
-    var btn=document.getElementById('sfb-'+biz);
-    if(btn)btn.textContent='✕ Exit';
-  }
-  setTimeout(function(){
-    BIZ_LIST.forEach(function(b){
-      if(window.sumCharts&&window.sumCharts[b])try{window.sumCharts[b].resize();}catch(e){}
-    });
-  },150);
-}
 
 
 // Matrix group collapse via event delegation
@@ -497,6 +492,54 @@ document.addEventListener('click', function(e){
   rows.forEach(function(r){ r.style.display = isOpen ? 'none' : ''; });
   if(ic){ ic.textContent = isOpen ? '▶' : '▼'; ic.setAttribute('data-open', isOpen ? '0' : '1'); }
 });
+
+
+function buildSumMatrix(biz){
+  var cfg=BIZ_CFG[biz];
+  var rows=getFilteredRows(biz);
+  var mtdM=getMTD(rows);
+  var fyRows=RAW.filter(function(r){return r['FY']===ACTIVE_FY&&r['Business']===biz;});
+  var mSet={};fyRows.forEach(function(r){if(r['Months'])mSet[r['Months']]=1;});
+  var months=MONTH_ORDER.filter(function(m){return mSet[m];});
+  var ytdDD={},ytdBV=0;
+  var mData=months.map(function(m){
+    var mr=rows.filter(function(r){return r['Months']===m;});
+    var mtdDD={};
+    mr.forEach(function(r){if(r['Customer Code']){mtdDD[r['Customer Code']]=1;ytdDD[r['Customer Code']]=1;}});
+    var bv=mr.reduce(function(s,r){return s+(parseFloat(r['BV'])||0);},0);
+    ytdBV+=bv;
+    return{month:m,mtdA:Object.keys(mtdDD).length,ytdA:Object.keys(ytdDD).length,bv:bv,ytdBV:ytdBV};
+  });
+  var TH='padding:7px 12px;font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid #E5E7EB;text-align:right;white-space:nowrap;';
+  var TD='padding:7px 12px;font-size:12px;border-bottom:1px solid #F3F4F6;text-align:right;';
+  var TDL='padding:7px 12px;font-size:12px;border-bottom:1px solid #F3F4F6;font-weight:600;color:#111827;';
+  var rows_html=mData.map(function(m){
+    var isMTD=m.month===mtdM;
+    var rowBg=isMTD?'background:#FFF7ED;':'';
+    return '<tr style="'+rowBg+'">'
+      +'<td style="'+TDL+(isMTD?'color:'+cfg.acc+';':'')+'">'+(isMTD?'&#9658; ':'')+m.month+'</td>'
+      +'<td style="'+TD+'color:'+cfg.acc+';font-weight:700">'+fmtInt(m.mtdA)+'</td>'
+      +'<td style="'+TD+'">'+fmtInt(m.ytdA)+'</td>'
+      +'<td style="'+TD+'">&#8377;'+fmt(m.bv)+'</td>'
+      +'<td style="'+TD+'">&#8377;'+fmt(m.ytdBV)+'</td>'
+      +'</tr>';
+  }).join('');
+  return '<div style="margin-bottom:1.2rem;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)">'
+    +'<div style="padding:10px 14px;background:'+cfg.acc+'18;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:8px">'
+    +'<span style="width:10px;height:10px;border-radius:50%;background:'+cfg.acc+';display:inline-block"></span>'
+    +'<span style="font-size:13px;font-weight:700;color:'+cfg.acc+'">'+biz+' — Month-wise Summary</span>'
+    +'</div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr style="background:#F9FAFB">'
+    +'<th style="'+TH+'text-align:left;white-space:nowrap">Month</th>'
+    +'<th style="'+TH+'">MTD Active DD</th>'
+    +'<th style="'+TH+'">YTD Active DD</th>'
+    +'<th style="'+TH+'">MTD Billed (&#8377; L)</th>'
+    +'<th style="'+TH+'">YTD Billed (&#8377; L)</th>'
+    +'</tr></thead>'
+    +'<tbody>'+rows_html+'</tbody>'
+    +'</table></div></div>';
+}
 
 </script>
 <script>
@@ -1119,50 +1162,83 @@ function renderSBUPills(){
 // ── SUMMARY ────────────────────────────────────────────────────
 function renderSummary(){
   document.getElementById('fy-badge').textContent=ACTIVE_FY;
+
+  // ── Overview cards (with DD count) ──
+  const gradMap={HW:'linear-gradient(135deg,#C2410C,#EA580C)',ERG:'linear-gradient(135deg,#065F46,#10B981)',ST:'linear-gradient(135deg,#5B21B6,#8B5CF6)'};
   document.getElementById('sum-overview-cards').innerHTML=BIZ_LIST.map(biz=>{
     const d=analyseFor(biz);const cfg=BIZ_CFG[biz];
     const pct=d.totalDD>0?Math.round(d.ytdActive/d.totalDD*100):0;
-    const gradMap={HW:'linear-gradient(135deg,#C2410C,#EA580C)',ERG:'linear-gradient(135deg,#065F46,#10B981)',ST:'linear-gradient(135deg,#5B21B6,#8B5CF6)'};
     return`<div class="sum-card" style="background:${gradMap[biz]}">
       <div class="sum-card-title">${biz} — ${ACTIVE_FY}</div>
       <div class="sum-stat"><span class="sum-stat-lbl">Total DD</span><span class="sum-stat-val">${fmtInt(d.totalDD)}</span></div>
       <div class="sum-stat"><span class="sum-stat-lbl">YTD Billed (₹ L)</span><span class="sum-stat-val">${fmt(d.ytdBV)}</span></div>
       <div class="sum-stat"><span class="sum-stat-lbl">MTD Billed (₹ L)</span><span class="sum-stat-val">${fmt(d.mtdBV)}</span></div>
-      <div class="sum-stat"><span class="sum-stat-lbl">YTD Active</span><span class="sum-stat-val">${fmtInt(d.ytdActive)}</span></div>
-      <div class="sum-stat"><span class="sum-stat-lbl">MTD Active</span><span class="sum-stat-val">${fmtInt(d.mtdActive)}</span></div>
+      <div class="sum-stat"><span class="sum-stat-lbl">YTD Active DD</span><span class="sum-stat-val">${fmtInt(d.ytdActive)}</span></div>
+      <div class="sum-stat"><span class="sum-stat-lbl">MTD Active DD</span><span class="sum-stat-val">${fmtInt(d.mtdActive)}</span></div>
       <div class="sum-stat"><span class="sum-stat-lbl">Active %</span><span class="sum-stat-val">${pct}%</span></div>
     </div>`;
   }).join('');
-  if(window.sumCharts)Object.values(window.sumCharts).forEach(c=>{try{c.destroy()}catch(e){}});
-  window.sumCharts={};
-  document.getElementById('sum-trend-row').innerHTML=BIZ_LIST.map(biz=>`<div class="sum-trend-card" id="stc-${biz}"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem"><div class="sum-trend-title" style="color:${BIZ_CFG[biz].acc};margin-bottom:0">${biz} — Monthly Billing</div><button onclick="sumFocus('${biz}')" id="sfb-${biz}" style="border:1px solid ${BIZ_CFG[biz].acc}55;background:${BIZ_CFG[biz].acc}11;color:${BIZ_CFG[biz].acc};border-radius:8px;padding:3px 9px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">⛶ Focus</button></div><div class="sum-trend-wrap" id="stw-${biz}"><canvas id="sc-${biz}"></canvas></div></div>`).join('');
-  setTimeout(()=>{
-    BIZ_LIST.forEach(biz=>{
-      const d=analyseFor(biz);const cfg=BIZ_CFG[biz];
-      if(window.sumCharts[biz]){try{window.sumCharts[biz].destroy();}catch(e){}}
-      const activeCounts=d.monthTrend.map(m=>m.active);
-      window.sumCharts[biz]=new Chart(document.getElementById('sc-'+biz),{
-        type:'line',
-        data:{labels:d.monthTrend.map(m=>m.month.slice(0,3)),datasets:[{data:d.monthTrend.map(m=>m.bv),borderColor:cfg.line,backgroundColor:cfg.line+'22',fill:true,tension:0.42,pointRadius:4,pointBackgroundColor:cfg.line,pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:2.5}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'₹'+fmt(v.raw)+'L | '+activeCounts[v.dataIndex]+' DD'}}},scales:{x:{ticks:{font:{size:10}},grid:{display:false}},y:{display:false}},layout:{padding:{top:34}}},
-        plugins:[{id:'dls',afterDatasetsDraw(chart){const ctx=chart.ctx;const meta=chart.getDatasetMeta(0);const ds=chart.data.datasets[0];ctx.save();ctx.textAlign='center';
-          meta.data.forEach((pt,i)=>{
-            ctx.font='700 9px -apple-system,sans-serif';ctx.fillStyle=cfg.acc;
-            ctx.fillText('₹'+fmt(ds.data[i]),pt.x,pt.y-18);
-            ctx.font='500 8px -apple-system,sans-serif';ctx.fillStyle='#6B7280';
-            ctx.fillText(activeCounts[i]+' DD',pt.x,pt.y-8);
-          });
-          ctx.restore();}}]
-      });
-    });
+
+  // ── Month-wise matrix: HW ERG ST ──
+  const wrap=document.getElementById('sum-matrix-wrap');
+  if(!wrap)return;
+  wrap.innerHTML=BIZ_LIST.map(biz=>buildSumMatrix(biz)).join('');
+  // Build month-wise matrix
+  setTimeout(function(){
+    var wrap=document.getElementById('sum-matrix-wrap');
+    if(wrap) wrap.innerHTML=BIZ_LIST.map(function(biz){return buildSumMatrix(biz);}).join('');
   },50);
-  const allRows=[];
-  BIZ_LIST.forEach(biz=>{
-    const d=analyseFor(biz);let ytdRunBV=0;const ytdRunA=new Set();
-    d.monthTrend.forEach(m=>{ytdRunBV+=m.bv;getFilteredRows(biz).filter(r=>r['Months']===m.month).forEach(r=>{if(r['Customer Code'])ytdRunA.add(r['Customer Code'])});allRows.push({biz,month:m.month,bv:m.bv,active:m.active,ytdBV:ytdRunBV,ytdActive:ytdRunA.size})});
-  });
-  document.getElementById('sum-table-body').innerHTML=allRows.map(r=>`<tr><td><span class="sum-biz-badge biz-${r.biz.toLowerCase()}">${r.biz}</span></td><td>${r.month}</td><td>₹${fmt(r.bv)}</td><td>${fmtInt(r.active)}</td><td>₹${fmt(r.ytdBV)}</td><td>${fmtInt(r.ytdActive)}</td></tr>`).join('');
 }
+
+function buildSumMatrix(biz){
+  const cfg=BIZ_CFG[biz];
+  const rows=getFilteredRows(biz);
+  const mtdM=getMTD(rows);
+  // Build per-month data
+  const fyRows=RAW.filter(r=>r['FY']===ACTIVE_FY&&r['Business']===biz);
+  const mSet=new Set(fyRows.map(r=>r['Months']||'').filter(Boolean));
+  const months=MONTH_ORDER.filter(m=>mSet.has(m));
+  var ytdDD={},ytdBV=0;
+  const mData=months.map(m=>{
+    const mr=rows.filter(r=>r['Months']===m);
+    const mtdDD={};
+    mr.forEach(r=>{if(r['Customer Code']){mtdDD[r['Customer Code']]=1;ytdDD[r['Customer Code']]=1;}});
+    const bv=mr.reduce((s,r)=>s+(parseFloat(r['BV'])||0),0);
+    ytdBV+=bv;
+    return{month:m,mtdA:Object.keys(mtdDD).length,ytdA:Object.keys(ytdDD).length,bv:bv,ytdBV:ytdBV};
+  });
+  const TH='padding:7px 12px;font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid #E5E7EB;text-align:right;white-space:nowrap;';
+  const TD='padding:7px 12px;font-size:12px;border-bottom:1px solid #F3F4F6;text-align:right;';
+  const TDL='padding:7px 12px;font-size:12px;border-bottom:1px solid #F3F4F6;font-weight:600;color:#111827;';
+  let rows_html=mData.map(m=>{
+    const isMTD=m.month===mtdM;
+    const rowBg=isMTD?'background:#FFF7ED;':'';
+    return '<tr style="'+rowBg+'">'
+      +'<td style="'+TDL+(isMTD?'color:'+cfg.acc+';':'')+'">'+(isMTD?'&#9658; ':'')+m.month+'</td>'
+      +'<td style="'+TD+'color:'+cfg.acc+';font-weight:700">'+fmtInt(m.mtdA)+'</td>'
+      +'<td style="'+TD+'">'+fmtInt(m.ytdA)+'</td>'
+      +'<td style="'+TD+'">&#8377;'+fmt(m.bv)+'</td>'
+      +'<td style="'+TD+'">&#8377;'+fmt(m.ytdBV)+'</td>'
+      +'</tr>';
+  }).join('');
+
+  return '<div style="margin-bottom:1.2rem;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)">'
+    +'<div style="padding:10px 14px;background:'+cfg.acc+'18;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:8px">'
+    +'<span style="width:10px;height:10px;border-radius:50%;background:'+cfg.acc+';display:inline-block"></span>'
+    +'<span style="font-size:13px;font-weight:700;color:'+cfg.acc+'">'+biz+' — Month-wise Summary</span>'
+    +'</div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr style="background:#F9FAFB">'
+    +'<th style="'+TH+'text-align:left">Month</th>'
+    +'<th style="'+TH+'">MTD Active DD</th>'
+    +'<th style="'+TH+'">YTD Active DD</th>'
+    +'<th style="'+TH+'">MTD Billed (₹ L)</th>'
+    +'<th style="'+TH+'">YTD Billed (₹ L)</th>'
+    +'</tr></thead>'
+    +'<tbody>'+rows_html+'</tbody>'
+    +'</table></div></div>';
+}
+
 
 // ── DROPDOWN SYSTEM ────────────────────────────────────────────
 function buildDD_list(key,query){
@@ -1303,30 +1379,6 @@ function buildStateMatrixRows(){
 }
 
 
-function sumFocus(biz){
-  var row=document.getElementById('sum-trend-row');
-  var card=document.getElementById('stc-'+biz);
-  if(!row||!card)return;
-  var already=card.classList.contains('focused');
-  document.querySelectorAll('.sum-trend-card').forEach(function(c){
-    c.classList.remove('focused');
-    var b=c.querySelector('button');
-    if(b)b.textContent='⛶ Focus';
-  });
-  row.classList.remove('has-focus');
-  if(!already){
-    card.classList.add('focused');
-    row.classList.add('has-focus');
-    var btn=document.getElementById('sfb-'+biz);
-    if(btn)btn.textContent='✕ Exit';
-  }
-  setTimeout(function(){
-    BIZ_LIST.forEach(function(b){
-      if(window.sumCharts&&window.sumCharts[b])try{window.sumCharts[b].resize();}catch(e){}
-    });
-  },150);
-}
-
 
 // Matrix group collapse via event delegation
 document.addEventListener('click', function(e){
@@ -1339,6 +1391,54 @@ document.addEventListener('click', function(e){
   rows.forEach(function(r){ r.style.display = isOpen ? 'none' : ''; });
   if(ic){ ic.textContent = isOpen ? '▶' : '▼'; ic.setAttribute('data-open', isOpen ? '0' : '1'); }
 });
+
+
+function buildSumMatrix(biz){
+  var cfg=BIZ_CFG[biz];
+  var rows=getFilteredRows(biz);
+  var mtdM=getMTD(rows);
+  var fyRows=RAW.filter(function(r){return r['FY']===ACTIVE_FY&&r['Business']===biz;});
+  var mSet={};fyRows.forEach(function(r){if(r['Months'])mSet[r['Months']]=1;});
+  var months=MONTH_ORDER.filter(function(m){return mSet[m];});
+  var ytdDD={},ytdBV=0;
+  var mData=months.map(function(m){
+    var mr=rows.filter(function(r){return r['Months']===m;});
+    var mtdDD={};
+    mr.forEach(function(r){if(r['Customer Code']){mtdDD[r['Customer Code']]=1;ytdDD[r['Customer Code']]=1;}});
+    var bv=mr.reduce(function(s,r){return s+(parseFloat(r['BV'])||0);},0);
+    ytdBV+=bv;
+    return{month:m,mtdA:Object.keys(mtdDD).length,ytdA:Object.keys(ytdDD).length,bv:bv,ytdBV:ytdBV};
+  });
+  var TH='padding:7px 12px;font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid #E5E7EB;text-align:right;white-space:nowrap;';
+  var TD='padding:7px 12px;font-size:12px;border-bottom:1px solid #F3F4F6;text-align:right;';
+  var TDL='padding:7px 12px;font-size:12px;border-bottom:1px solid #F3F4F6;font-weight:600;color:#111827;';
+  var rows_html=mData.map(function(m){
+    var isMTD=m.month===mtdM;
+    var rowBg=isMTD?'background:#FFF7ED;':'';
+    return '<tr style="'+rowBg+'">'
+      +'<td style="'+TDL+(isMTD?'color:'+cfg.acc+';':'')+'">'+(isMTD?'&#9658; ':'')+m.month+'</td>'
+      +'<td style="'+TD+'color:'+cfg.acc+';font-weight:700">'+fmtInt(m.mtdA)+'</td>'
+      +'<td style="'+TD+'">'+fmtInt(m.ytdA)+'</td>'
+      +'<td style="'+TD+'">&#8377;'+fmt(m.bv)+'</td>'
+      +'<td style="'+TD+'">&#8377;'+fmt(m.ytdBV)+'</td>'
+      +'</tr>';
+  }).join('');
+  return '<div style="margin-bottom:1.2rem;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)">'
+    +'<div style="padding:10px 14px;background:'+cfg.acc+'18;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:8px">'
+    +'<span style="width:10px;height:10px;border-radius:50%;background:'+cfg.acc+';display:inline-block"></span>'
+    +'<span style="font-size:13px;font-weight:700;color:'+cfg.acc+'">'+biz+' — Month-wise Summary</span>'
+    +'</div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr style="background:#F9FAFB">'
+    +'<th style="'+TH+'text-align:left;white-space:nowrap">Month</th>'
+    +'<th style="'+TH+'">MTD Active DD</th>'
+    +'<th style="'+TH+'">YTD Active DD</th>'
+    +'<th style="'+TH+'">MTD Billed (&#8377; L)</th>'
+    +'<th style="'+TH+'">YTD Billed (&#8377; L)</th>'
+    +'</tr></thead>'
+    +'<tbody>'+rows_html+'</tbody>'
+    +'</table></div></div>';
+}
 
 </script>
 </body>
