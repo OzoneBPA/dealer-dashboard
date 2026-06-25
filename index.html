@@ -423,13 +423,76 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+function buildStateMatrixRows(){
+  var bizList=CURRENT_BIZ==='ALL'?BIZ_LIST:[CURRENT_BIZ];
+  var TD='padding:7px 12px;font-size:12px;border-bottom:1px solid #F3F4F6;';
+  var TDSUB='padding:8px 12px;font-size:12px;font-weight:800;border-bottom:2px solid #D1FAE5;';
+  var html='';
+  for(var bi=0;bi<bizList.length;bi++){
+    var biz=bizList[bi];
+    var cfg=BIZ_CFG[biz];
+    var rows=getFilteredRows(biz);
+    var mtdM=getMTD(rows);
+    var mtdRows=rows.filter(function(r){return r['Months']===mtdM;});
+    var sm={};
+    for(var ri=0;ri<rows.length;ri++){
+      var r=rows[ri];
+      var st=r['Customer State']||'Other';
+      if(!sm[st])sm[st]={ytdBV:0,mtdBV:0,ytdD:{},mtdD:{}};
+      sm[st].ytdBV+=parseFloat(r['BV'])||0;
+      if(r['Customer Code'])sm[st].ytdD[r['Customer Code']]=1;
+    }
+    for(var mi=0;mi<mtdRows.length;mi++){
+      var mr=mtdRows[mi];
+      var mst=mr['Customer State']||'Other';
+      if(!sm[mst])sm[mst]={ytdBV:0,mtdBV:0,ytdD:{},mtdD:{}};
+      sm[mst].mtdBV+=parseFloat(mr['BV'])||0;
+      if(mr['Customer Code'])sm[mst].mtdD[mr['Customer Code']]=1;
+    }
+    var entries=Object.keys(sm).map(function(k){return [k,sm[k]];});
+    entries.sort(function(a,b){return b[1].ytdBV-a[1].ytdBV;});
+    var totYtdA=0,totMtdA=0,totYtdBV=0,totMtdBV=0;
+    for(var ei=0;ei<entries.length;ei++){
+      totYtdA+=Object.keys(entries[ei][1].ytdD).length;
+      totMtdA+=Object.keys(entries[ei][1].mtdD).length;
+      totYtdBV+=entries[ei][1].ytdBV;
+      totMtdBV+=entries[ei][1].mtdBV;
+    }
+    html+='<tr style="background:#ECFDF5">'
+      +'<td style="'+TDSUB+'color:'+cfg.acc+'">'
+      +'<span style="display:inline-flex;align-items:center;gap:6px">'
+      +'<span style="width:8px;height:8px;border-radius:50%;background:'+cfg.acc+';display:inline-block"></span>'
+      +biz+'</span></td>'
+      +'<td style="'+TDSUB+'color:#065F46;font-style:italic">All States</td>'
+      +'<td style="'+TDSUB+'text-align:right;color:'+cfg.acc+'">'+fmtInt(totYtdA)+'</td>'
+      +'<td style="'+TDSUB+'text-align:right;color:#065F46">'+fmtInt(totMtdA)+'</td>'
+      +'<td style="'+TDSUB+'text-align:right;color:#065F46">'+fmt(totYtdBV)+'</td>'
+      +'<td style="'+TDSUB+'text-align:right;color:#065F46">'+fmt(totMtdBV)+'</td>'
+      +'</tr>';
+    for(var si=0;si<entries.length;si++){
+      var est=entries[si][0];
+      var ev=entries[si][1];
+      html+='<tr>'
+        +'<td style="'+TD+'"></td>'
+        +'<td style="'+TD+'padding-left:24px;color:#374151">'+est+'</td>'
+        +'<td style="'+TD+'text-align:right;color:'+cfg.acc+';font-weight:600">'+fmtInt(Object.keys(ev.ytdD).length)+'</td>'
+        +'<td style="'+TD+'text-align:right">'+fmtInt(Object.keys(ev.mtdD).length)+'</td>'
+        +'<td style="'+TD+'text-align:right">'+fmt(ev.ytdBV)+'</td>'
+        +'<td style="'+TD+'text-align:right">'+fmt(ev.mtdBV)+'</td>'
+        +'</tr>';
+    }
+    if(bizList.length>1) html+='<tr><td colspan="6" style="padding:3px;background:#F0F2F7"></td></tr>';
+  }
+  return html;
+}
+
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 // ── STATE ──────────────────────────────────────────────────────
 let RAW=[], ACTIVE_FY='', ALL_FYS=[];
 let CURRENT_BIZ='HW', CURRENT_PAGE='detail';
-let DRILL_OPEN=false;
 const CHARTS={};
 const ACT_SBU=new Set();
 const MONTH_ORDER=['April','May','June','July','August','September','October','November','December','January','February','March'];
@@ -831,7 +894,6 @@ function renderVTabs(){
 
 function switchBiz(biz){
   CURRENT_BIZ=biz;
-  DRILL_OPEN=false;
   ACT_SBU.clear();renderSBUPills();
   // refresh subgroup/customer — ALL = all businesses, otherwise scope to biz
   const fyBizRows=biz==='ALL'
@@ -864,38 +926,27 @@ function renderContent(){
     <div class="sbu-sec-title"><i class="ti ti-layout-grid" style="font-size:13px"></i> SBU Breakdown <span style="font-size:10px;font-weight:400;color:#D1D5DB">— click to filter · multi-select</span></div>
     <div class="cat-grid${ACT_SBU.size>0?' has-sel':''}" id="sbu-grid"></div>
 
-    <!-- Drill-down button -->
-    <button class="drill-btn${DRILL_OPEN?' open':''}" id="drill-btn" style="color:${cfg.acc};border-color:${cfg.acc}" onclick="toggleDrill()">
-      <i class="ti ti-map-pin" style="font-size:14px"></i>
-      Customer State Drill-Down
-      <i class="ti ti-chevron-down" style="font-size:13px"></i>
-    </button>
-
-    <!-- Drill-down state table -->
-    <div id="drill-section" style="display:${DRILL_OPEN?'block':'none'}">
-      <div class="drill-section">
-        <div class="drill-table-title" style="font-size:11px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:.8rem;display:flex;align-items:center;gap:6px">
-          <i class="ti ti-map-pin" style="font-size:13px;color:${cfg.acc}"></i> ${CURRENT_BIZ==='ALL'?'All Businesses':CURRENT_BIZ} — Customer State Level Detail
-        </div>
-        <div style="overflow-x:auto">
-          <table class="drill-table">
-            <thead><tr>
-              <th>State</th>
-              <th>Total DD</th>
-              <th>YTD Active</th>
-              <th>MTD Active</th>
-              <th>Total Billed (₹ L)</th>
-              <th>YTD Billed (₹ L)</th>
-              <th>MTD Billed (₹ L)</th>
-              <th>Active %</th>
-            </tr></thead>
-            <tbody>${renderStateTableRows(d)}</tbody>
-          </table>
-        </div>
+    <!-- Business x State Matrix -->
+    <div style="margin-bottom:1rem;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+      <div style="padding:10px 14px;font-size:11px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:6px">
+        <i class="ti ti-table" style="font-size:13px"></i> Business &times; Customer State
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:#F9FAFB">
+              <th style="padding:8px 12px;text-align:left;font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #E5E7EB;white-space:nowrap">Business</th>
+              <th style="padding:8px 12px;text-align:left;font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #E5E7EB;white-space:nowrap">Customer State</th>
+              <th style="padding:8px 12px;text-align:right;font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #E5E7EB;white-space:nowrap">YTD Active</th>
+              <th style="padding:8px 12px;text-align:right;font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #E5E7EB;white-space:nowrap">MTD Active</th>
+              <th style="padding:8px 12px;text-align:right;font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #E5E7EB;white-space:nowrap">YTD Billed</th>
+              <th style="padding:8px 12px;text-align:right;font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #E5E7EB;white-space:nowrap">MTD Billed</th>
+            </tr>
+          </thead>
+          <tbody>${buildStateMatrixRows()}</tbody>
+        </table>
       </div>
     </div>
-
-
 
     <!-- State vertical bar chart -->
     <div class="state-section">
@@ -967,51 +1018,6 @@ function renderContent(){
   },60);
 }
 
-function renderStateTableRows(d){
-  // Get state-level data including mtd
-  const biz=CURRENT_BIZ; // may be 'ALL'
-  const rows=getFilteredRows(biz);
-  const mtdM=getMTD(rows);
-  const mtdRows=rows.filter(r=>r['Months']===mtdM);
-  const bvSum=a=>a.reduce((s,r)=>s+(parseFloat(r['BV'])||0),0);
-  const uniq=a=>[...new Set(a.map(r=>r['Customer Code']).filter(Boolean))].length;
-
-  const stateMap={};
-  rows.forEach(r=>{
-    const st=r['Customer State']||'Other';
-    if(!stateMap[st])stateMap[st]={ytdBV:0,mtdBV:0,ytdD:new Set(),mtdD:new Set(),allD:new Set()};
-    stateMap[st].ytdBV+=parseFloat(r['BV'])||0;
-    if(r['Customer Code']){stateMap[st].ytdD.add(r['Customer Code']);stateMap[st].allD.add(r['Customer Code'])}
-  });
-  mtdRows.forEach(r=>{
-    const st=r['Customer State']||'Other';
-    if(!stateMap[st])stateMap[st]={ytdBV:0,mtdBV:0,ytdD:new Set(),mtdD:new Set(),allD:new Set()};
-    stateMap[st].mtdBV+=parseFloat(r['BV'])||0;
-    if(r['Customer Code'])stateMap[st].mtdD.add(r['Customer Code']);
-  });
-
-  // All-time DD per state for this biz (ALL = across all businesses)
-  const allBase=biz==='ALL'?RAW:RAW.filter(r=>r['Business']===biz);
-  const allStateDD={};
-  allBase.forEach(r=>{const st=r['Customer State']||'Other';if(!allStateDD[st])allStateDD[st]=new Set();if(r['Customer Code'])allStateDD[st].add(r['Customer Code'])});
-
-  return Object.entries(stateMap).sort((a,b)=>b[1].ytdBV-a[1].ytdBV).map(([st,v])=>{
-    const totalDD=(allStateDD[st]||new Set()).size;
-    const ytdA=v.ytdD.size, mtdA=v.mtdD.size;
-    const pct=totalDD>0?Math.round(ytdA/totalDD*100):0;
-    return`<tr>
-      <td class="td-state">${st}</td>
-      <td class="td-num">${fmtInt(totalDD)}</td>
-      <td class="td-num">${fmtInt(ytdA)}</td>
-      <td class="td-num">${fmtInt(mtdA)}</td>
-      <td class="td-num">₹${fmt(v.ytdBV)}</td>
-      <td class="td-num">₹${fmt(v.ytdBV)}</td>
-      <td class="td-num">₹${fmt(v.mtdBV)}</td>
-      <td class="td-num">${pct}%</td>
-    </tr>`;
-  }).join('');
-}
-
 function renderFilterChips(){
   const el=document.getElementById('filter-chips-row');
   if(!el)return;
@@ -1065,12 +1071,6 @@ function makeChip(label,icon='ti-filter',textColor='#4338CA',bg='#EEF2FF',border
   return sp;
 }
 function resetFilter(key){FS[key].act=[...FS[key].all];FS[key].pend=[...FS[key].all];updateDDBadge(key);if(CURRENT_PAGE==='detail')renderDetail();else renderSummary()}
-
-function toggleDrill(){
-  DRILL_OPEN=!DRILL_OPEN;
-  document.getElementById('drill-btn').classList.toggle('open',DRILL_OPEN);
-  document.getElementById('drill-section').style.display=DRILL_OPEN?'block':'none';
-}
 
 function renderSBUCards(d,cfg){
   const sbuTotal=d.sbuTotal||1;
