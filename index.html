@@ -481,84 +481,112 @@ document.addEventListener('click', function(e){
 });
 
 function openChartFullscreen(chartKey, title){
-  var existing = document.getElementById('fs-overlay');
-  if(existing){ existing.remove(); if(window._fsChart){try{window._fsChart.destroy();}catch(e){}} return; }
+  var existing=document.getElementById('fs-overlay');
+  if(existing){
+    existing.remove();
+    if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}
+    return;
+  }
 
-  var srcChart = CHARTS[chartKey];
-  if(!srcChart) return;
+  var srcChart=CHARTS[chartKey];
+  if(!srcChart)return;
 
-  var overlay = document.createElement('div');
-  overlay.className = 'fs-overlay'; overlay.id = 'fs-overlay';
-  overlay.addEventListener('click', function(e){
-    if(e.target===overlay){ overlay.remove(); if(window._fsChart){try{window._fsChart.destroy();}catch(e){}} }
+  // Build overlay
+  var overlay=document.createElement('div');
+  overlay.className='fs-overlay';overlay.id='fs-overlay';
+  overlay.addEventListener('click',function(e){
+    if(e.target===overlay){overlay.remove();if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}}
   });
 
-  var box = document.createElement('div'); box.className = 'fs-box';
-  var hdr = document.createElement('div'); hdr.className = 'fs-header';
-  var ttl = document.createElement('span'); ttl.className = 'fs-title'; ttl.textContent = title;
-  var cls = document.createElement('button'); cls.className = 'fs-close'; cls.textContent = '✕ Close';
-  cls.addEventListener('click', function(){ overlay.remove(); if(window._fsChart){try{window._fsChart.destroy();}catch(e){}} });
-  hdr.appendChild(ttl); hdr.appendChild(cls);
-  var wrap = document.createElement('div'); wrap.className = 'fs-canvas-wrap';
-  var canvas = document.createElement('canvas');
-  wrap.appendChild(canvas); box.appendChild(hdr); box.appendChild(wrap);
-  overlay.appendChild(box); document.body.appendChild(overlay);
+  var box=document.createElement('div');box.className='fs-box';
+  var hdr=document.createElement('div');hdr.className='fs-header';
+  var ttl=document.createElement('span');ttl.className='fs-title';ttl.textContent=title;
+  var cls=document.createElement('button');cls.className='fs-close';cls.textContent='✕ Close';
+  cls.addEventListener('click',function(){overlay.remove();if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}});
+  hdr.appendChild(ttl);hdr.appendChild(cls);
+
+  var wrap=document.createElement('div');wrap.className='fs-canvas-wrap';
+  var canvas=document.createElement('canvas');
+  wrap.appendChild(canvas);box.appendChild(hdr);box.appendChild(wrap);
+  overlay.appendChild(box);document.body.appendChild(overlay);
 
   setTimeout(function(){
     if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}
 
-    var chartData = JSON.parse(JSON.stringify(srcChart.config.data));
-    var chartOpts = JSON.parse(JSON.stringify(srcChart.config.options||{}));
-    chartOpts.responsive = true;
-    chartOpts.maintainAspectRatio = false;
+    var srcData=srcChart.config.data;
+    var srcType=srcChart.config.type;
 
-    if(chartOpts.scales&&chartOpts.scales.y){chartOpts.scales.y.display=false;}
-    chartOpts.layout = {padding:{top:70,bottom:8,left:8,right:8}};
-
-    // Rebuild data label plugin from scratch based on chart type
-    var dlPlugin = {
-      id:'fsDataLabels',
-      afterDatasetsDraw:function(chart){
+    // Custom afterDraw plugin that draws labels
+    var labelPlugin={
+      id:'fsLabels',
+      afterDraw:function(chart){
         var ctx=chart.ctx;
-        chart.data.datasets.forEach(function(ds,di){
-          var meta=chart.getDatasetMeta(di);
-          if(meta.hidden) return;
-          ctx.save();
-          meta.data.forEach(function(el,i){
+        ctx.save();
+        if(srcType==='bar'){
+          var meta=chart.getDatasetMeta(0);
+          var ds=chart.data.datasets[0];
+          meta.data.forEach(function(bar,i){
             var val=ds.data[i];
-            if(val===null||val===undefined||val===0) return;
-            var x=el.x, y=el.y;
-            if(chart.config.type==='bar'){
-              // Bar chart - label above bar
-              ctx.font='700 11px -apple-system,sans-serif';
-              // Use actual bar color (backgroundColor may be string like '#EA580CBB')
-              var barColor=Array.isArray(ds.backgroundColor)?ds.backgroundColor[i]:ds.backgroundColor;
-              ctx.fillStyle=(barColor||'#374151').toString().slice(0,7); // strip alpha
-              ctx.textAlign='center';
-              ctx.textBaseline='bottom';
-              ctx.fillText('₹'+parseFloat(val).toFixed(1), x, y-10);
-            } else {
-              // Line chart - label above point
-              ctx.font='700 10px -apple-system,sans-serif';
+            if(!val&&val!==0)return;
+            var color=(typeof ds.borderColor==='string'?ds.borderColor:'#374151').replace(/[0-9a-f]{2}$/i,'');
+            ctx.font='bold 11px -apple-system,sans-serif';
+            ctx.fillStyle=color.length>=4?color:'#374151';
+            ctx.textAlign='center';
+            ctx.textBaseline='bottom';
+            ctx.fillText('₹'+parseFloat(val).toFixed(1),bar.x,bar.y-6);
+          });
+        } else if(srcType==='line'){
+          chart.data.datasets.forEach(function(ds,di){
+            var meta=chart.getDatasetMeta(di);
+            if(meta.hidden)return;
+            meta.data.forEach(function(pt,i){
+              var val=ds.data[i];
+              if(!val&&val!==0)return;
+              ctx.font='bold 10px -apple-system,sans-serif';
               ctx.fillStyle=ds.borderColor||'#374151';
               ctx.textAlign='center';
               ctx.textBaseline='bottom';
-              var formatted=typeof val==='number'?'₹'+val.toFixed(1):'₹'+val;
-              ctx.fillText(formatted, x, y-10);
-            }
+              ctx.fillText('₹'+parseFloat(val).toFixed(1),pt.x,pt.y-10);
+            });
           });
-          ctx.restore();
-        });
+        }
+        ctx.restore();
       }
     };
 
-    window._fsChart = new Chart(canvas, {
-      type: srcChart.config.type,
-      data: chartData,
-      options: chartOpts,
-      plugins: [dlPlugin]
+    // Build clean options
+    var opts={
+      responsive:true,
+      maintainAspectRatio:false,
+      layout:{padding:{top:60,bottom:8,left:8,right:8}},
+      plugins:{
+        legend:srcChart.config.options&&srcChart.config.options.plugins&&srcChart.config.options.plugins.legend
+          ?srcChart.config.options.plugins.legend
+          :{display:srcType==='line'}
+      },
+      scales:{}
+    };
+
+    // Copy scales but hide y-axis for bar
+    if(srcType==='bar'){
+      opts.scales={
+        x:{ticks:{font:{size:10},autoSkip:false,maxRotation:45},grid:{display:false},border:{display:false}},
+        y:{display:false}
+      };
+    } else {
+      opts.scales={
+        x:{ticks:{font:{size:11},autoSkip:false},grid:{display:false},border:{display:false}},
+        y:{display:false}
+      };
+    }
+
+    window._fsChart=new Chart(canvas,{
+      type:srcType,
+      data:JSON.parse(JSON.stringify(srcData)),
+      options:opts,
+      plugins:[labelPlugin]
     });
-  }, 80);
+  },100);
 }
 
 
