@@ -488,48 +488,78 @@ function openChartFullscreen(chartKey, title){
   if(!srcChart) return;
 
   var overlay = document.createElement('div');
-  overlay.className = 'fs-overlay';
-  overlay.id = 'fs-overlay';
-  overlay.addEventListener('click', function(e){ if(e.target===overlay){ overlay.remove(); if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}  } });
+  overlay.className = 'fs-overlay'; overlay.id = 'fs-overlay';
+  overlay.addEventListener('click', function(e){
+    if(e.target===overlay){ overlay.remove(); if(window._fsChart){try{window._fsChart.destroy();}catch(e){}} }
+  });
 
-  var box = document.createElement('div');
-  box.className = 'fs-box';
-
-  var hdr = document.createElement('div');
-  hdr.className = 'fs-header';
-
-  var ttl = document.createElement('span');
-  ttl.className = 'fs-title';
-  ttl.textContent = title;
-
-  var cls = document.createElement('button');
-  cls.className = 'fs-close';
-  cls.textContent = '✕ Close';
+  var box = document.createElement('div'); box.className = 'fs-box';
+  var hdr = document.createElement('div'); hdr.className = 'fs-header';
+  var ttl = document.createElement('span'); ttl.className = 'fs-title'; ttl.textContent = title;
+  var cls = document.createElement('button'); cls.className = 'fs-close'; cls.textContent = '✕ Close';
   cls.addEventListener('click', function(){ overlay.remove(); if(window._fsChart){try{window._fsChart.destroy();}catch(e){}} });
-
-  hdr.appendChild(ttl);
-  hdr.appendChild(cls);
-
-  var wrap = document.createElement('div');
-  wrap.className = 'fs-canvas-wrap';
-
+  hdr.appendChild(ttl); hdr.appendChild(cls);
+  var wrap = document.createElement('div'); wrap.className = 'fs-canvas-wrap';
   var canvas = document.createElement('canvas');
-  wrap.appendChild(canvas);
-  box.appendChild(hdr);
-  box.appendChild(wrap);
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
+  wrap.appendChild(canvas); box.appendChild(hdr); box.appendChild(wrap);
+  overlay.appendChild(box); document.body.appendChild(overlay);
 
   setTimeout(function(){
     if(window._fsChart){try{window._fsChart.destroy();}catch(e){}}
-    // Include plugins from source chart so data labels render
+
+    var chartData = JSON.parse(JSON.stringify(srcChart.config.data));
+    var chartOpts = JSON.parse(JSON.stringify(srcChart.config.options||{}));
+    chartOpts.responsive = true;
+    chartOpts.maintainAspectRatio = false;
+    chartOpts.layout = {padding:{top:44,bottom:8,left:8,right:8}};
+
+    // Rebuild data label plugin from scratch based on chart type
+    var dlPlugin = {
+      id:'fsDataLabels',
+      afterDatasetsDraw:function(chart){
+        var ctx=chart.ctx;
+        chart.data.datasets.forEach(function(ds,di){
+          var meta=chart.getDatasetMeta(di);
+          if(meta.hidden) return;
+          ctx.save();
+          meta.data.forEach(function(el,i){
+            var val=ds.data[i];
+            if(val===null||val===undefined||val===0) return;
+            var x=el.x, y=el.y;
+            if(chart.config.type==='bar'){
+              // Bar chart - label above bar
+              ctx.font='700 11px -apple-system,sans-serif';
+              ctx.fillStyle=ds.borderColor||ds.backgroundColor||'#374151';
+              ctx.textAlign='center';
+              ctx.textBaseline='bottom';
+              ctx.fillText('₹'+parseFloat(val).toFixed(2), x, y-18);
+              // DD count from label if available
+              if(chart.data.labels&&chart.data.labels[i]){
+                var lbl=chart.data.labels[i];
+                // show state name only in fullscreen (it's already on x-axis)
+              }
+            } else {
+              // Line chart - label above point
+              ctx.font='700 10px -apple-system,sans-serif';
+              ctx.fillStyle=ds.borderColor||'#374151';
+              ctx.textAlign='center';
+              ctx.textBaseline='bottom';
+              var formatted=typeof val==='number'?'₹'+val.toFixed(2):'₹'+val;
+              ctx.fillText(formatted, x, y-10);
+            }
+          });
+          ctx.restore();
+        });
+      }
+    };
+
     window._fsChart = new Chart(canvas, {
       type: srcChart.config.type,
-      data: JSON.parse(JSON.stringify(srcChart.config.data)),
-      options: Object.assign({}, srcChart.config.options, {responsive:true, maintainAspectRatio:false, layout:{padding:{top:40,bottom:4,left:8,right:8}}}),
-      plugins: srcChart.config.plugins || []
+      data: chartData,
+      options: chartOpts,
+      plugins: [dlPlugin]
     });
-  }, 50);
+  }, 80);
 }
 
 
@@ -1186,10 +1216,10 @@ function renderContent(){
             const s=d.states[i];
             ctx.font='700 10px -apple-system,sans-serif';
             ctx.fillStyle=cfg.acc;ctx.textAlign='center';
-            ctx.fillText('₹'+s.bv.toFixed(2),bar.x,bar.y-16);
+            ctx.fillText('₹'+s.bv.toFixed(2),bar.x,bar.y-20);
             ctx.font='500 9px -apple-system,sans-serif';
             ctx.fillStyle='#6B7280';
-            ctx.fillText(s.dd+' DD',bar.x,bar.y-5);
+            ctx.fillText(s.dd+' DD',bar.x,bar.y-9);
           });
           ctx.restore();
         }
